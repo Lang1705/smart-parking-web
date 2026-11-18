@@ -24,6 +24,7 @@ with app.app_context():
     db.create_all()
 
 @app.route('/', methods=['GET', 'POST'])
+@app.route('/api/index', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
         plat = request.form.get('plat_nomor')
