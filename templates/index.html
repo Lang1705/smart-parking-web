@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Smart Parking Log</h1>
+        <p class="subtitle">Terhubung langsung ke Supabase PostgreSQL & pgAdmin</p>
+
+        <form method="POST" id="formParkir">
+            <input type="text" name="plat_nomor" placeholder="Nomor Plat (Contoh: B 1234 XYZ)" required>
+            <input type="text" name="keterangan" placeholder="Keterangan / Lokasi Slot..." required>
+            <button type="submit" id="btnSimpan">Simpan Data</button>
+        </form>
+
+        <h2>Riwayat Kendaraan ({{ daftar_data|length }})</h2>
+        <div class="list-data">
+            {% for item in daftar_data %}
+            <div class="card">
+                <strong>{{ item.plat_nomor }}</strong>
+                <p>{{ item.keterangan }}</p>
+            </div>
+            {% else %}
+            <p class="kosong">Belum ada data kendaraan tercatat.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
