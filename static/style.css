@@ -224,6 +224,125 @@ body.admin-theme {
     color: #fbbf24 !important;
 }
 
+/* Banner Notifikasi Pembatalan di Admin */
+.admin-cancel-banner {
+    margin-top: 16px;
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.92), rgba(153, 27, 27, 0.88));
+    border: 2px solid #f87171;
+    border-radius: 20px;
+    padding: 18px 22px;
+    box-shadow: 0 12px 32px rgba(239, 68, 68, 0.32);
+}
+
+.acb-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(254, 202, 202, 0.25);
+}
+
+.acb-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.acb-bell {
+    font-size: 1.8rem;
+    animation: dangerPulse 1.3s infinite;
+    border-radius: 50%;
+}
+
+.acb-title strong {
+    display: block;
+    color: #ffffff;
+    font-size: 0.96rem;
+}
+
+.acb-title small {
+    color: #fecaca;
+    font-size: 0.78rem;
+}
+
+.btn-clear-all-notif {
+    background: #ffffff;
+    color: #991b1b;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.acb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.acb-item {
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(254, 202, 202, 0.3);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.acb-item-info {
+    font-size: 0.84rem;
+    color: #f8fafc;
+    line-height: 1.5;
+}
+
+.acb-badge-slot {
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-right: 6px;
+}
+
+.acb-plat {
+    background: #fbbf24;
+    color: #0f172a;
+    font-weight: 800;
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 0.78rem;
+}
+
+.acb-item-info small {
+    display: block;
+    color: #fca5a5;
+    font-size: 0.75rem;
+}
+
+.btn-dismiss-notif {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-dismiss-notif:hover {
+    background: #ef4444;
+}
+
 .admin-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -452,38 +571,15 @@ body.admin-theme {
 }
 
 .login-visual h2 {
-    font-size: 1.85rem;
+    font-size: 1.95rem;
     line-height: 1.25;
     color: #0f172a;
     margin-bottom: 12px;
     font-weight: 800;
 }
 
-.login-visual p {
-    color: #475569;
-    font-size: 0.92rem;
-    line-height: 1.6;
-}
-
-.benefit-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 18px;
-}
-
-.benefit-pills span {
-    background: #ffffff;
-    border: 1px solid #bfdbfe;
-    color: #1e40af;
-    font-size: 0.78rem;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 99px;
-}
-
 .car-scene {
-    margin-top: 28px;
+    margin-top: 24px;
     background: #ffffff;
     border: 1px solid #bfdbfe;
     border-radius: 18px;
@@ -530,6 +626,30 @@ body.admin-theme {
     );
     background-size: 48px 100%;
     animation: roadMove 0.8s linear infinite;
+}
+
+/* Kredit Developer di Pojok Kiri Bawah Login */
+.dev-credit-box {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(37, 99, 235, 0.25);
+    text-align: left;
+    line-height: 1.4;
+}
+
+.dev-credit-box strong {
+    display: block;
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: #1e3a8a;
+    letter-spacing: 0.3px;
+}
+
+.dev-credit-box span {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #475569;
 }
 
 .login-form-side {
