@@ -152,39 +152,21 @@ def proses_form_login():
         error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
         return render_template('index.html', is_login_page=True, error=error)
 
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    return send_from_directory(STATIC_DIR, filename)
 @app.route('/favicon.ico')
 def favicon():
     return Response(status=204)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        return proses_form_login()
-    if session.get('mode'):
-        return render_dashboard()
-    return render_template('index.html', is_login_page=True, error=None)
-
-@app.route('/logout', methods=['GET', 'POST'])
-def logout():
-    session.clear()
-    return render_template('index.html', is_login_page=True, error=None)
-
-@app.route('/keluar/<int:id>', methods=['POST'])
-def kendaraan_keluar(id):
-    if not session.get('mode'):
-        return render_template('index.html', is_login_page=True, error=None)
-    data = DataParkir.query.get_or_404(id)
-    db.session.delete(data)
-    db.session.commit()
-    return render_dashboard()
-
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def catch_all(path):
-    # Tangani tombol Ganti Akun (Logout) meskipun terkena rewrite Vercel
+    # Layani CSS dan JS langsung agar 100% stabil di Vercel
+    asset = request.args.get('asset')
+    if asset == 'css':
+        return send_from_directory(STATIC_DIR, 'style.css', mimetype='text/css')
+    if asset == 'js':
+        return send_from_directory(STATIC_DIR, 'script.js', mimetype='application/javascript')
+
+    # Tangani tombol Ganti Akun (Logout)
     if request.args.get('logout') == '1' or request.form.get('aksi') == 'logout':
         session.clear()
         return render_template('index.html', is_login_page=True, error=None)
