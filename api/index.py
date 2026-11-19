@@ -99,6 +99,7 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/api/index.py', methods=['GET', 'POST'])
 @app.route('/api/index', methods=['GET', 'POST'])
 @app.route('/', methods=['GET', 'POST'])
 def home():
