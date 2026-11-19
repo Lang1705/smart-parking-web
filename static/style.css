@@ -1,73 +1,61 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f1f5f9;
-    margin: 0;
-    padding: 20px;
-}
-
-.container {
-    max-width: 500px;
-    margin: 0 auto;
-    background-color: #ffffff;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-h1 {
-    margin: 0 0 5px 0;
-    color: #0f172a;
-}
-
-.subtitle {
-    color: #64748b;
-    font-size: 14px;
-    margin-bottom: 20px;
-}
-
-form {
+/* Lencana Member di Hero Header & Kotak Hari/Tanggal/Tahun/Jam */
+.badge-row {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 25px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
 }
 
-input {
-    padding: 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 14px;
+.badge-live {
+    margin-bottom: 0;
 }
 
-button {
-    background-color: #16a34a;
-    color: #ffffff;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
+.badge-member-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #0f172a;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 11px;
+    border-radius: 99px;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    letter-spacing: 0.4px;
 }
 
-button:hover {
-    background-color: #15803d;
+.badge-guest-hero {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #e2e8f0;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 11px;
+    border-radius: 99px;
 }
 
-.card {
-    background-color: #f8fafc;
-    border-left: 4px solid #16a34a;
-    padding: 12px;
-    margin-bottom: 10px;
-    border-radius: 6px;
+.datetime-box {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #f8fafc;
 }
 
-.card p {
-    margin: 4px 0 0 0;
-    color: #334155;
-    font-size: 14px;
+.datetime-box .dt-sep {
+    color: #64748b;
 }
 
-.kosong {
-    color: #94a3b8;
-    text-align: center;
+#liveClock {
+    color: #34d399;
+    font-variant-numeric: tabular-nums;
 }
