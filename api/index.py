@@ -1,42 +1,203 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for
+import re
+from flask import Flask, render_template, request, redirect, url_for, session, Response
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
+app.secret_key = os.environ.get('SECRET_KEY', 'smart-parking-esa-unggul-2026')
 
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///lokal.db')
+database_url = os.environ.get('DATABASE_URL', 'sqlite:////tmp/lokal.db')
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+}
 
 db = SQLAlchemy(app)
 
-# Struktur tabel yang akan otomatis muncul di pgAdmin kamu
 class DataParkir(db.Model):
     __tablename__ = 'data_parkir'
     id = db.Column(db.Integer, primary_key=True)
     plat_nomor = db.Column(db.String(20), nullable=False)
     keterangan = db.Column(db.Text, nullable=False)
 
+class MemberParkir(db.Model):
+    __tablename__ = 'member_parkir'
+    id = db.Column(db.Integer, primary_key=True)
+    no_hp = db.Column(db.String(25), unique=True, nullable=False)
+    nama = db.Column(db.String(100), nullable=False)
+    plat_nomor = db.Column(db.String(20), nullable=False)
+
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        print("Database init warning:", e)
+
+def hitung_tarif_akhir(durasi_jam, is_member=False):
+    tarif_dasar = 5000 if durasi_jam <= 1 else 5000 + (durasi_jam - 1) * 3000
+    if is_member:
+        diskon = int(tarif_dasar * 0.10)  # Diskon Member 10%
+        return tarif_dasar, diskon, tarif_dasar - diskon
+    return tarif_dasar, 0, tarif_dasar
+
+# Tangani permintaan otomatis /favicon.ico dari browser agar tidak error 500
+@app.route('/favicon.ico')
+def favicon():
+    return Response(status=204)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if session.get('mode'):
+        return redirect(url_for('home'))
+
+    error = None
+    if request.method == 'POST':
+        aksi = request.form.get('aksi', 'member')
+
+        if aksi == 'guest':
+            session['mode'] = 'guest'
+            session['nama'] = 'Pengunjung Tamu'
+            session['no_hp'] = ''
+            session['plat_member'] = ''
+            return redirect(url_for('home'))
+
+        no_hp = request.form.get('no_hp', '').strip()
+        nama = request.form.get('nama', '').strip()
+        plat = request.form.get('plat_nomor', '').strip().upper()
+
+        if no_hp and nama and plat:
+            member = MemberParkir.query.filter_by(no_hp=no_hp).first()
+            if member:
+                member.nama = nama
+                member.plat_nomor = plat
+            else:
+                member = MemberParkir(no_hp=no_hp, nama=nama, plat_nomor=plat)
+                db.session.add(member)
+            db.session.commit()
+
+            session['mode'] = 'member'
+            session['nama'] = member.nama
+            session['no_hp'] = member.no_hp
+            session['plat_member'] = member.plat_nomor
+            return redirect(url_for('home'))
+        else:
+            error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
+
+    return render_template('index.html', is_login_page=True, error=error)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 @app.route('/', methods=['GET', 'POST'])
-@app.route('/api/index', methods=['GET', 'POST'])
 def home():
+    if not session.get('mode'):
+        return redirect(url_for('login'))
+
+    is_member = (session.get('mode') == 'member')
+
     if request.method == 'POST':
-        plat = request.form.get('plat_nomor')
-        ket = request.form.get('keterangan')
-        if plat and ket:
-            data_baru = DataParkir(plat_nomor=plat.upper(), keterangan=ket)
+        nama_pengendara = request.form.get('nama_pengendara', '').strip()
+        no_hp = request.form.get('no_hp', '').strip()
+        plat = request.form.get('plat_nomor', '').strip().upper()
+        slot_pilihan = request.form.get('slot_pilihan', '').strip()
+        durasi = int(request.form.get('durasi', 1))
+        metode_bayar = request.form.get('metode_bayar', 'QRIS').strip()
+
+        if nama_pengendara and no_hp and plat and slot_pilihan:
+            _, diskon, total_bayar = hitung_tarif_akhir(durasi, is_member)
+            tarif_rp = f"Rp{total_bayar:,}".replace(",", ".")
+            status_member = "MEMBER (Diskon 10%)" if is_member else "NON-MEMBER"
+            status_bayar = "LUNAS VIA QRIS" if metode_bayar == "QRIS" else "BAYAR DI KASIR (TERVERIFIKASI)"
+
+            ket_lengkap = (
+                f"Slot {slot_pilihan} | {status_member} | Nama: {nama_pengendara} ({no_hp}) | "
+                f"Durasi: {durasi} Jam | Total: {tarif_rp} | {status_bayar}"
+            )
+            data_baru = DataParkir(plat_nomor=plat, keterangan=ket_lengkap)
             db.session.add(data_baru)
             db.session.commit()
         return redirect(url_for('home'))
 
     daftar_data = DataParkir.query.order_by(DataParkir.id.desc()).all()
-    return render_template('index.html', daftar_data=daftar_data)
+
+    semua_kode_slot = [f"A{i}" for i in range(1, 21)]
+    slot_terisi_map = {}
+
+    for item in daftar_data:
+        match = re.search(r'\b(A(?:[1-9]|1[0-9]|20))\b', item.keterangan.upper())
+        if match:
+            kode = match.group(1)
+            if kode not in slot_terisi_map:
+                nama_match = re.search(r'Nama:\s*([^(|]+)', item.keterangan)
+                tarif_match = re.search(r'Total:\s*(Rp[\d.]+)', item.keterangan)
+                bayar_match = re.search(r'(LUNAS VIA QRIS|BAYAR DI KASIR[^|]*)', item.keterangan)
+                slot_terisi_map[kode] = {
+                    'id': item.id,
+                    'plat_nomor': item.plat_nomor,
+                    'nama': nama_match.group(1).strip() if nama_match else '-',
+                    'tarif': tarif_match.group(1).strip() if tarif_match else 'Rp5.000',
+                    'metode': bayar_match.group(1).strip() if bayar_match else 'TERBOOKING',
+                    'keterangan': item.keterangan
+                }
+
+    slots = []
+    for kode in semua_kode_slot:
+        if kode in slot_terisi_map:
+            slots.append({
+                'kode': kode,
+                'status': 'TERISI',
+                'id_data': slot_terisi_map[kode]['id'],
+                'plat_nomor': slot_terisi_map[kode]['plat_nomor'],
+                'nama': slot_terisi_map[kode]['nama'],
+                'tarif': slot_terisi_map[kode]['tarif'],
+                'metode': slot_terisi_map[kode]['metode'],
+                'keterangan': slot_terisi_map[kode]['keterangan']
+            })
+        else:
+            slots.append({
+                'kode': kode,
+                'status': 'KOSONG',
+                'id_data': None,
+                'plat_nomor': '-',
+                'nama': '-',
+                'tarif': '-',
+                'metode': '-',
+                'keterangan': 'Tersedia'
+            })
+
+    total_slot = len(slots)
+    jumlah_terisi = len(slot_terisi_map)
+    jumlah_kosong = total_slot - jumlah_terisi
+
+    return render_template(
+        'index.html',
+        is_login_page=False,
+        is_member=is_member,
+        user=session.get('nama', 'Pengunjung'),
+        no_hp=session.get('no_hp', ''),
+        plat_member=session.get('plat_member', ''),
+        daftar_data=daftar_data,
+        slots=slots,
+        total_slot=total_slot,
+        jumlah_kosong=jumlah_kosong,
+        jumlah_terisi=jumlah_terisi
+    )
+
+@app.route('/keluar/<int:id>', methods=['POST'])
+def kendaraan_keluar(id):
+    if not session.get('mode'):
+        return redirect(url_for('login'))
+    data = DataParkir.query.get_or_404(id)
+    db.session.delete(data)
+    db.session.commit()
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)
