@@ -40,14 +40,14 @@
     </div>
 
     {% elif page_view == 'admin_dashboard' %}
-    <!-- ==================== 2. DASHBOARD KHUSUS ADMIN (DARK EXECUTIVE) ==================== -->
-    <div class="wrapper">
+    <!-- ==================== 2. DASHBOARD KHUSUS ADMIN (DARK EXECUTIVE + NOTIF BATAL) ==================== -->
+    <div class="wrapper" id="adminDashboardRoot">
         <header class="admin-header animate-fade-down">
             <div class="brand">
                 <div class="admin-logo-box">🛡️</div>
                 <div>
                     <div class="badge-row">
-                        <span class="admin-live-pill"><span class="pulse-dot"></span> ADMIN OVERRIDE AKTIF</span>
+                        <span class="admin-live-pill"><span class="pulse-dot"></span> AUTO-SYNC AKTIF (10 DETIK)</span>
                         <span class="admin-role-pill">👑 BEBAS KOSONGKAN SLOT KAPAN SAJA</span>
                     </div>
                     <h1>Admin Control Panel — {{ mall_info.nama }}</h1>
@@ -56,7 +56,7 @@
             </div>
             <div class="header-right">
                 <div class="admin-nav-actions">
-                    <a href="/?logout=1" class="btn-switch-user">👤 Tampilan Pengunjung</a>
+                    <a href="/" class="btn-switch-user">🔄 Refresh Sekarang</a>
                     <a href="/?logout=1" class="btn-logout">Keluar Admin</a>
                 </div>
                 <div class="datetime-box admin-dt">
@@ -66,6 +66,41 @@
                 </div>
             </div>
         </header>
+
+        <!-- BANNER NOTIFIKASI PEMBATALAN USER -->
+        {% if log_pembatalan|length > 0 %}
+        <div class="admin-cancel-banner animate-shake-pop">
+            <div class="acb-top">
+                <div class="acb-title">
+                    <span class="acb-bell">🚨</span>
+                    <div>
+                        <strong>NOTIFIKASI PEMBATALAN BOOKING ({{ log_pembatalan|length }} Laporan Baru)</strong>
+                        <small>Pengunjung membatalkan parkir sebelum durasi berakhir (Uang Hangus / Non-Refundable)</small>
+                    </div>
+                </div>
+                <form method="POST" action="/">
+                    <input type="hidden" name="aksi" value="hapus_semua_notif">
+                    <button type="submit" class="btn-clear-all-notif">✓ Tandai Semua Sudah Dibaca</button>
+                </form>
+            </div>
+
+            <div class="acb-list">
+                {% for b in log_pembatalan %}
+                <div class="acb-item">
+                    <div class="acb-item-info">
+                        <span class="acb-badge-slot">{{ b.mall_nama }} • Slot {{ b.kode_slot }}</span>
+                        <strong>a.n {{ b.nama }}</strong> • No. HP: <strong>{{ b.no_hp }}</strong> • Plat: <span class="acb-plat">{{ b.plat_nomor }}</span>
+                        <small>Dibatalkan pada {{ b.waktu_batal }} • Uang Hangus: <b>{{ b.tarif }}</b></small>
+                    </div>
+                    <form method="POST" action="/">
+                        <input type="hidden" name="hapus_notif_id" value="{{ b.id }}">
+                        <button type="submit" class="btn-dismiss-notif" title="Tutup notifikasi ini">✕ Tutup</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Switcher Lokasi Mall di Admin -->
         <div class="mall-switcher-bar admin-mall-bar animate-fade-up">
@@ -83,9 +118,9 @@
         <!-- 4 Kartu KPI Admin -->
         <section class="admin-stats-grid animate-fade-up">
             <div class="admin-stat-card">
-                <span class="asc-label">💰 Total Pendapatan Semua Mall</span>
+                <span class="asc-label">💰 Total Pendapatan (Termasuk Hangus)</span>
                 <h2 class="asc-gold">{{ pendapatan_rp }}</h2>
-                <small>{{ semua_transaksi|length }} transaksi aktif</small>
+                <small>{{ semua_transaksi|length }} aktif • {{ log_pembatalan|length }} dibatalkan</small>
             </div>
             <div class="admin-stat-card">
                 <span class="asc-label">🚗 Okupansi {{ mall_info.nama }}</span>
@@ -163,7 +198,7 @@
             <aside class="side-column">
                 <div class="admin-panel">
                     <div class="history-head">
-                        <h3>Log Transaksi ({{ mall_info.nama }})</h3>
+                        <h3>Log Parkir Aktif ({{ mall_info.nama }})</h3>
                         <span class="admin-count-badge">{{ daftar_data|length }}</span>
                     </div>
                     <div class="list-data">
@@ -171,7 +206,7 @@
                         <div class="admin-log-card">
                             <div class="log-info">
                                 <strong>{{ item.plat_nomor }} • Slot {{ item.kode_slot }}</strong>
-                                <p>{{ item.nama }} | {{ item.tarif }} | Selesai: {{ item.jam_selesai }} ({{ item.sisa_waktu }})</p>
+                                <p>a.n {{ item.nama }} ({{ item.no_hp }}) • {{ item.tarif }} • Selesai {{ item.jam_selesai }}</p>
                             </div>
                             <form method="POST" action="/">
                                 <input type="hidden" name="keluar_id" value="{{ item.id }}">
@@ -216,51 +251,52 @@
             <div class="login-visual">
                 <div>
                     <div class="visual-badge">✨ SMART PARKING MULTI-MALL</div>
-                    <h2>Satu Akun untuk Mall A & Mall B, Diskon 10% Member!</h2>
-                    <p>Pilih lokasi tujuan Anda di <strong>Mall A (2 Lantai)</strong> atau <strong>Mall B (1 Lantai)</strong> dengan booking slot otomatis.</p>
-
-                    <div class="benefit-pills">
-                        <span>🏢 Mall A (2 Lantai)</span>
-                        <span>🏬 Mall B (1 Lantai)</span>
-                        <span>🏷️ Diskon Member 10%</span>
-                    </div>
+                    <h2>🎉 Ayo buat member bisa dapat diskon 10%!</h2>
                 </div>
 
-                <div class="car-scene">
-                    <div class="parking-gate"><span class="pulse-dot"></span> GATE IN • SMART SENSOR ACTIVE</div>
-                    <svg class="hero-car-svg" viewBox="0 0 320 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <ellipse cx="160" cy="114" rx="125" ry="9" fill="rgba(15, 23, 42, 0.14)"/>
-                        <path d="M42 82 L58 46 C64 34 76 28 92 28 L205 28 C222 28 235 35 244 48 L266 64 C282 68 292 76 292 88 L292 96 C292 101 288 105 282 105 L38 105 C32 105 28 101 28 95 L28 89 C28 84 34 82 42 82 Z" fill="url(#carBodyGrad)"/>
-                        <path d="M72 50 L85 36 L145 36 L145 54 L68 54 Z" fill="#0F172A" opacity="0.85"/>
-                        <path d="M155 36 L202 36 C212 36 220 41 228 54 L155 54 Z" fill="#0F172A" opacity="0.85"/>
-                        <rect x="276" y="72" width="14" height="10" rx="4" fill="#F59E0B"/>
-                        <rect x="28" y="72" width="10" height="12" rx="3" fill="#EF4444"/>
-                        <polygon points="290,74 320,60 320,94 290,82" fill="url(#headlightBeam)"/>
-                        <g class="wheel-spin" style="transform-origin: 88px 102px;">
-                            <circle cx="88" cy="102" r="20" fill="#1E293B" stroke="#CBD5E1" stroke-width="4"/>
-                            <circle cx="88" cy="102" r="8" fill="#F8FAFC"/>
-                            <line x1="88" y1="84" x2="88" y2="120" stroke="#64748B" stroke-width="2"/>
-                            <line x1="70" y1="102" x2="106" y2="102" stroke="#64748B" stroke-width="2"/>
-                        </g>
-                        <g class="wheel-spin" style="transform-origin: 234px 102px;">
-                            <circle cx="234" cy="102" r="20" fill="#1E293B" stroke="#CBD5E1" stroke-width="4"/>
-                            <circle cx="234" cy="102" r="8" fill="#F8FAFC"/>
-                            <line x1="234" y1="84" x2="234" y2="120" stroke="#64748B" stroke-width="2"/>
-                            <line x1="216" y1="102" x2="252" y2="102" stroke="#64748B" stroke-width="2"/>
-                        </g>
-                        <defs>
-                            <linearGradient id="carBodyGrad" x1="28" y1="28" x2="292" y2="105" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#38BDF8"/>
-                                <stop offset="0.5" stop-color="#2563EB"/>
-                                <stop offset="1" stop-color="#1D4ED8"/>
-                            </linearGradient>
-                            <linearGradient id="headlightBeam" x1="290" y1="77" x2="320" y2="77" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#FDE047" stop-opacity="0.9"/>
-                                <stop offset="1" stop-color="#FDE047" stop-opacity="0"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                    <div class="road-strip-anim"></div>
+                <div>
+                    <div class="car-scene">
+                        <div class="parking-gate"><span class="pulse-dot"></span> GATE IN • SMART SENSOR ACTIVE</div>
+                        <svg class="hero-car-svg" viewBox="0 0 320 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="160" cy="114" rx="125" ry="9" fill="rgba(15, 23, 42, 0.14)"/>
+                            <path d="M42 82 L58 46 C64 34 76 28 92 28 L205 28 C222 28 235 35 244 48 L266 64 C282 68 292 76 292 88 L292 96 C292 101 288 105 282 105 L38 105 C32 105 28 101 28 95 L28 89 C28 84 34 82 42 82 Z" fill="url(#carBodyGrad)"/>
+                            <path d="M72 50 L85 36 L145 36 L145 54 L68 54 Z" fill="#0F172A" opacity="0.85"/>
+                            <path d="M155 36 L202 36 C212 36 220 41 228 54 L155 54 Z" fill="#0F172A" opacity="0.85"/>
+                            <rect x="276" y="72" width="14" height="10" rx="4" fill="#F59E0B"/>
+                            <rect x="28" y="72" width="10" height="12" rx="3" fill="#EF4444"/>
+                            <polygon points="290,74 320,60 320,94 290,82" fill="url(#headlightBeam)"/>
+                            <g class="wheel-spin" style="transform-origin: 88px 102px;">
+                                <circle cx="88" cy="102" r="20" fill="#1E293B" stroke="#CBD5E1" stroke-width="4"/>
+                                <circle cx="88" cy="102" r="8" fill="#F8FAFC"/>
+                                <line x1="88" y1="84" x2="88" y2="120" stroke="#64748B" stroke-width="2"/>
+                                <line x1="70" y1="102" x2="106" y2="102" stroke="#64748B" stroke-width="2"/>
+                            </g>
+                            <g class="wheel-spin" style="transform-origin: 234px 102px;">
+                                <circle cx="234" cy="102" r="20" fill="#1E293B" stroke="#CBD5E1" stroke-width="4"/>
+                                <circle cx="234" cy="102" r="8" fill="#F8FAFC"/>
+                                <line x1="234" y1="84" x2="234" y2="120" stroke="#64748B" stroke-width="2"/>
+                                <line x1="216" y1="102" x2="252" y2="102" stroke="#64748B" stroke-width="2"/>
+                            </g>
+                            <defs>
+                                <linearGradient id="carBodyGrad" x1="28" y1="28" x2="292" y2="105" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#38BDF8"/>
+                                    <stop offset="0.5" stop-color="#2563EB"/>
+                                    <stop offset="1" stop-color="#1D4ED8"/>
+                                </linearGradient>
+                                <linearGradient id="headlightBeam" x1="290" y1="77" x2="320" y2="77" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#FDE047" stop-opacity="0.9"/>
+                                    <stop offset="1" stop-color="#FDE047" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="road-strip-anim"></div>
+                    </div>
+
+                    <!-- Kredit Pengembang di Pojok Kiri Bawah -->
+                    <div class="dev-credit-box">
+                        <strong>develop by GN</strong>
+                        <span>(Gilang &amp; Noval) still develop</span>
+                    </div>
                 </div>
             </div>
 
@@ -269,7 +305,7 @@
                     <div class="logo-box">P</div>
                     <div>
                         <h3>Buat / Masuk Member</h3>
-                        <span>Dapatkan diskon 10% di Mall A & Mall B</span>
+                        <span>Dapatkan diskon 10% di Mall A &amp; Mall B</span>
                     </div>
                 </div>
 
