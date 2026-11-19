@@ -152,6 +152,9 @@ def proses_form_login():
         error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
         return render_template('index.html', is_login_page=True, error=error)
 
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(STATIC_DIR, filename)
 @app.route('/favicon.ico')
 def favicon():
     return Response(status=204)
