@@ -329,7 +329,7 @@
                 <button type="button" class="btn-close-modal" onclick="tutupModalParkir()">✕</button>
             </div>
 
-            <form method="POST" action="{{ url_for('home') }}" id="formParkirModal">
+            <form method="POST" action="/" id="formParkirModal">
                 <input type="hidden" id="slot_pilihan" name="slot_pilihan" value="A1">
                 <input type="hidden" id="metode_bayar" name="metode_bayar" value="QRIS">
 
@@ -442,4 +442,41 @@
                             <div class="qr-scan-line"></div>
                             <svg viewBox="0 0 100 100" width="110" height="110">
                                 <rect x="5" y="5" width="28" height="28" fill="none" stroke="#0f172a" stroke-width="6"/>
-                                <rect x="13" y="
+                                <rect x="13" y="13" width="12" height="12" fill="#0f172a"/>
+                                <rect x="67" y="5" width="28" height="28" fill="none" stroke="#0f172a" stroke-width="6"/>
+                                <rect x="75" y="13" width="12" height="12" fill="#0f172a"/>
+                                <rect x="5" y="67" width="28" height="28" fill="none" stroke="#0f172a" stroke-width="6"/>
+                                <rect x="13" y="75" width="12" height="12" fill="#0f172a"/>
+                                <rect x="42" y="10" width="8" height="8" fill="#0f172a"/>
+                                <rect x="42" y="26" width="16" height="8" fill="#0f172a"/>
+                                <rect x="10" y="44" width="16" height="8" fill="#0f172a"/>
+                                <rect x="38" y="42" width="24" height="24" fill="#4f46e5"/>
+                                <rect x="70" y="44" width="20" height="8" fill="#0f172a"/>
+                                <rect x="44" y="72" width="12" height="20" fill="#0f172a"/>
+                                <rect x="68" y="70" width="24" height="24" fill="#0f172a"/>
+                            </svg>
+                        </div>
+                        <p>Scan QRIS di atas dengan GoPay / OVO / DANA / M-Banking, lalu klik konfirmasi di bawah.</p>
+                    </div>
+
+                    <!-- Box Info Kasir -->
+                    <div id="kasirBox" class="kasir-display-box" style="display: none;">
+                        <span>🧾</span>
+                        <p>Kode booking akan diterbitkan. Pembayaran tunai/kartu dilakukan di loket <strong>Kasir Gate Out</strong> saat keluar.</p>
+                    </div>
+
+                    <div class="modal-actions" style="margin-top: 16px;">
+                        <button type="button" class="btn-cancel" onclick="kembaliKeData()">← Kembali</button>
+                        <button type="submit" id="btnConfirmBooking" class="btn-submit btn-pay-success">
+                            ✅ Konfirmasi Bayar & Booking Slot
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
