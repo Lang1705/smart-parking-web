@@ -3,50 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Parking System — Sistem Optimasi Ruang Parkir</title>
+    <title>Smart Parking System — Multi-Mall Integrated</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/?asset=css">
 </head>
-<body>
-    <!-- Background Dekoratif Halus -->
+<body class="{{ 'admin-theme' if page_view in ['admin_login', 'admin_dashboard'] else 'user-theme' }}">
     <div class="bg-orb orb-1"></div>
     <div class="bg-orb orb-2"></div>
 
-    {% if is_login_page %}
-    <!-- ==================== HALAMAN LOGIN MEMBER & NON-MEMBER ==================== -->
+    {% if page_view == 'admin_login' %}
+    <!-- ==================== 1. HALAMAN LOGIN KHUSUS ADMIN ==================== -->
     <div class="login-wrapper animate-fade-up">
-        <div class="login-card">
-            <!-- Sisi Kiri: Ilustrasi Mobil & Promo Member -->
-            <div class="login-visual">
-                <div>
-                    <div class="visual-badge">✨ SMART PARKING DIGITAL</div>
-                    <h2>Parkir Lebih Mudah, Hemat 10% Khusus Member!</h2>
-                    <p>Daftar member cukup dengan No. HP, Nama, dan Plat Kendaraan untuk nikmati potongan harga otomatis & deteksi plat cepat.</p>
+        <div class="admin-login-card">
+            <div class="admin-shield-icon">🛡️</div>
+            <span class="admin-badge-pill">ADMIN CONTROL CENTER</span>
+            <h2>Login Administrator Parkir</h2>
+            <p>Akses petugas untuk mengontrol slot di Mall A & Mall B, memantau pendapatan, dan mengosongkan slot kapan saja.</p>
 
-                    <div class="benefit-pills">
-                        <span>🏷️ Diskon Member 10%</span>
-                        <span>⚡ Auto-Detect Plat</span>
-                        <span>📱 Bayar QRIS / Kasir</span>
+            {% if error %}
+            <div class="login-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/" class="admin-login-form">
+                <input type="hidden" name="aksi" value="admin_login">
+                <div class="form-group">
+                    <label for="admin_password">Kata Sandi Admin</label>
+                    <input type="password" id="admin_password" name="admin_password" placeholder="Masukkan password admin..." required autofocus>
+                </div>
+                <button type="submit" class="btn-admin-submit">🔐 Masuk ke Dashboard Admin ➔</button>
+            </form>
+
+            <a href="/?logout=1" class="back-user-link">← Kembali ke Halaman Pengunjung / Member</a>
+        </div>
+    </div>
+
+    {% elif page_view == 'admin_dashboard' %}
+    <!-- ==================== 2. DASHBOARD KHUSUS ADMIN (DARK EXECUTIVE) ==================== -->
+    <div class="wrapper">
+        <header class="admin-header animate-fade-down">
+            <div class="brand">
+                <div class="admin-logo-box">🛡️</div>
+                <div>
+                    <div class="badge-row">
+                        <span class="admin-live-pill"><span class="pulse-dot"></span> ADMIN OVERRIDE AKTIF</span>
+                        <span class="admin-role-pill">👑 BEBAS KOSONGKAN SLOT KAPAN SAJA</span>
+                    </div>
+                    <h1>Admin Control Panel — {{ mall_info.nama }}</h1>
+                    <p>{{ mall_info.subjudul }} • Monitoring Terpusat</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="admin-nav-actions">
+                    <a href="/?logout=1" class="btn-switch-user">👤 Tampilan Pengunjung</a>
+                    <a href="/?logout=1" class="btn-logout">Keluar Admin</a>
+                </div>
+                <div class="datetime-box admin-dt">
+                    <span id="liveDate">📅 Memuat tanggal...</span>
+                    <span class="dt-sep">|</span>
+                    <span id="liveClock">🕒 00:00:00 WIB</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Switcher Lokasi Mall di Admin -->
+        <div class="mall-switcher-bar admin-mall-bar animate-fade-up">
+            <span>📍 Pilih Lokasi Monitoring:</span>
+            <div class="mall-tabs">
+                <a href="/?mall=MALL_A" class="mall-tab-btn {{ 'active' if mall_info.id == 'MALL_A' else '' }}">
+                    🏢 Mall A — Grand Central (2 Lantai)
+                </a>
+                <a href="/?mall=MALL_B" class="mall-tab-btn {{ 'active' if mall_info.id == 'MALL_B' else '' }}">
+                    🏬 Mall B — Plaza Sentral (1 Lantai)
+                </a>
+            </div>
+        </div>
+
+        <!-- 4 Kartu KPI Admin -->
+        <section class="admin-stats-grid animate-fade-up">
+            <div class="admin-stat-card">
+                <span class="asc-label">💰 Total Pendapatan Semua Mall</span>
+                <h2 class="asc-gold">{{ pendapatan_rp }}</h2>
+                <small>{{ semua_transaksi|length }} transaksi aktif</small>
+            </div>
+            <div class="admin-stat-card">
+                <span class="asc-label">🚗 Okupansi {{ mall_info.nama }}</span>
+                <h2>{{ jumlah_terisi }} / {{ total_slot }}</h2>
+                <small>{{ jumlah_kosong }} slot masih kosong</small>
+            </div>
+            <div class="admin-stat-card">
+                <span class="asc-label">👑 Member Terdaftar</span>
+                <h2>{{ daftar_member|length }} <small>Akun</small></h2>
+                <small>Berlaku di Mall A & Mall B</small>
+            </div>
+            <div class="admin-stat-card">
+                <span class="asc-label">⚙️ Override Gate {{ mall_info.id }}</span>
+                <form method="POST" action="/" onsubmit="return confirm('Kosongkan SEMUA slot di {{ mall_info.nama }} sekarang?');">
+                    <input type="hidden" name="aksi" value="reset_semua">
+                    <button type="submit" class="btn-reset-all">🧹 Kosongkan Semua Slot</button>
+                </form>
+            </div>
+        </section>
+
+        <div class="admin-main-grid animate-fade-up">
+            <!-- Monitoring Denah per Lantai -->
+            <section class="admin-panel">
+                <div class="panel-header">
+                    <div>
+                        <h3>Denah Slot — {{ mall_info.nama }}</h3>
+                        <p>Admin dapat menekan <strong>Selesaikan (Kosongkan)</strong> kapan saja meski durasi belum habis</p>
                     </div>
                 </div>
 
-                <!-- Adegan Animasi Mobil Melaju -->
+                {% for lt in lantai_data %}
+                <div class="floor-section">
+                    <div class="floor-badge-header admin-floor-head">
+                        <span>🏗️ {{ lt.nama }}</span>
+                        <small>{{ lt.slots|length }} Slot</small>
+                    </div>
+                    <div class="slots-grid {{ 'grid-mall-b' if mall_info.id == 'MALL_B' else '' }}">
+                        {% for slot in lt.slots %}
+                            {% if slot.status == 'KOSONG' %}
+                            <div class="admin-slot-box admin-slot-empty">
+                                <div class="slot-top">
+                                    <span class="slot-code">{{ slot.kode }}</span>
+                                    <span class="status-pill pill-green">KOSONG</span>
+                                </div>
+                                <div class="slot-body">
+                                    <small>Sensor Siap</small>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="admin-slot-box admin-slot-occupied">
+                                <div class="slot-top">
+                                    <span class="slot-code">{{ slot.kode }}</span>
+                                    <span class="status-pill pill-red">TERISI</span>
+                                </div>
+                                <div class="slot-body">
+                                    <strong class="admin-plat">{{ slot.plat_nomor }}</strong>
+                                    <div class="admin-slot-detail">{{ slot.nama }}</div>
+                                    <div class="admin-slot-price">{{ slot.tarif }} • {{ slot.sisa_waktu }}</div>
+                                </div>
+                                <form method="POST" action="/">
+                                    <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                    <button type="submit" class="btn-admin-gateout">
+                                        ✅ Selesaikan (Kosongkan)
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+
+            <!-- Log Transaksi & Member -->
+            <aside class="side-column">
+                <div class="admin-panel">
+                    <div class="history-head">
+                        <h3>Log Transaksi ({{ mall_info.nama }})</h3>
+                        <span class="admin-count-badge">{{ daftar_data|length }}</span>
+                    </div>
+                    <div class="list-data">
+                        {% for item in daftar_data %}
+                        <div class="admin-log-card">
+                            <div class="log-info">
+                                <strong>{{ item.plat_nomor }} • Slot {{ item.kode_slot }}</strong>
+                                <p>{{ item.nama }} | {{ item.tarif }} | Selesai: {{ item.jam_selesai }} ({{ item.sisa_waktu }})</p>
+                            </div>
+                            <form method="POST" action="/">
+                                <input type="hidden" name="keluar_id" value="{{ item.id }}">
+                                <button type="submit" class="btn-mini-out">Kosongkan</button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <span>📋</span>
+                            <p>Belum ada kendaraan aktif di mall ini.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="admin-panel">
+                    <div class="history-head">
+                        <h3>Member Terdaftar</h3>
+                        <span class="admin-count-badge">{{ daftar_member|length }}</span>
+                    </div>
+                    <div class="list-data" style="max-height: 220px;">
+                        {% for m in daftar_member %}
+                        <div class="admin-log-card">
+                            <div class="log-info">
+                                <strong>👑 {{ m.nama }} ({{ m.plat_nomor }})</strong>
+                                <p>No. HP: {{ m.no_hp }}</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="empty-state"><p>Belum ada member terdaftar.</p></div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    {% elif page_view == 'user_login' %}
+    <!-- ==================== 3. HALAMAN LOGIN PENGUNJUNG / MEMBER ==================== -->
+    <div class="login-wrapper animate-fade-up">
+        <div class="login-card">
+            <div class="login-visual">
+                <div>
+                    <div class="visual-badge">✨ SMART PARKING MULTI-MALL</div>
+                    <h2>Satu Akun untuk Mall A & Mall B, Diskon 10% Member!</h2>
+                    <p>Pilih lokasi tujuan Anda di <strong>Mall A (2 Lantai)</strong> atau <strong>Mall B (1 Lantai)</strong> dengan booking slot otomatis.</p>
+
+                    <div class="benefit-pills">
+                        <span>🏢 Mall A (2 Lantai)</span>
+                        <span>🏬 Mall B (1 Lantai)</span>
+                        <span>🏷️ Diskon Member 10%</span>
+                    </div>
+                </div>
+
                 <div class="car-scene">
                     <div class="parking-gate"><span class="pulse-dot"></span> GATE IN • SMART SENSOR ACTIVE</div>
                     <svg class="hero-car-svg" viewBox="0 0 320 130" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <ellipse cx="160" cy="114" rx="125" ry="9" fill="rgba(15, 23, 42, 0.14)"/>
-                        <!-- Bodi Mobil -->
                         <path d="M42 82 L58 46 C64 34 76 28 92 28 L205 28 C222 28 235 35 244 48 L266 64 C282 68 292 76 292 88 L292 96 C292 101 288 105 282 105 L38 105 C32 105 28 101 28 95 L28 89 C28 84 34 82 42 82 Z" fill="url(#carBodyGrad)"/>
-                        <!-- Kaca -->
                         <path d="M72 50 L85 36 L145 36 L145 54 L68 54 Z" fill="#0F172A" opacity="0.85"/>
                         <path d="M155 36 L202 36 C212 36 220 41 228 54 L155 54 Z" fill="#0F172A" opacity="0.85"/>
-                        <!-- Lampu -->
                         <rect x="276" y="72" width="14" height="10" rx="4" fill="#F59E0B"/>
                         <rect x="28" y="72" width="10" height="12" rx="3" fill="#EF4444"/>
                         <polygon points="290,74 320,60 320,94 290,82" fill="url(#headlightBeam)"/>
-                        <!-- Roda dengan Jeruji Berputar -->
                         <g class="wheel-spin" style="transform-origin: 88px 102px;">
                             <circle cx="88" cy="102" r="20" fill="#1E293B" stroke="#CBD5E1" stroke-width="4"/>
                             <circle cx="88" cy="102" r="8" fill="#F8FAFC"/>
@@ -75,13 +264,12 @@
                 </div>
             </div>
 
-            <!-- Sisi Kanan: Form Member & Opsi Tanpa Member -->
             <div class="login-form-side">
                 <div class="login-brand">
                     <div class="logo-box">P</div>
                     <div>
                         <h3>Buat / Masuk Member</h3>
-                        <span>Dapatkan diskon 10% setiap parkir</span>
+                        <span>Dapatkan diskon 10% di Mall A & Mall B</span>
                     </div>
                 </div>
 
@@ -89,56 +277,53 @@
                 <div class="login-error">{{ error }}</div>
                 {% endif %}
 
-                <!-- Form Member -->
                 <form method="POST" action="/" class="login-form">
                     <input type="hidden" name="aksi" value="member">
-
                     <div class="form-group">
                         <label for="no_hp">Nomor HP (ID Member)</label>
                         <input type="tel" id="no_hp" name="no_hp" placeholder="Contoh: 081234567890" required autocomplete="off">
                     </div>
-
                     <div class="form-group">
                         <label for="nama">Nama Lengkap</label>
                         <input type="text" id="nama" name="nama" placeholder="Masukkan nama Anda..." required autocomplete="off">
                     </div>
-
                     <div class="form-group">
                         <label for="plat_nomor">Plat Kendaraan Utama</label>
                         <input type="text" id="plat_nomor" name="plat_nomor" placeholder="Contoh: B 1234 XYZ" required autocomplete="off">
                     </div>
-
                     <button type="submit" class="btn-submit">👑 Daftar / Masuk Sebagai Member ➔</button>
                 </form>
 
                 <div class="divider-or"><span>ATAU</span></div>
 
-                <!-- Tombol Langsung Masuk Tanpa Member -->
                 <form method="POST" action="/">
                     <input type="hidden" name="aksi" value="guest">
                     <button type="submit" class="btn-guest-enter">
                         🚗 Masuk Tanpa Member (Tamu / Tarif Normal) ➔
                     </button>
                 </form>
+
+                <div style="text-align: center; margin-top: 16px;">
+                    <a href="/?admin=1" class="admin-portal-link">🛡️ Masuk sebagai Petugas / Admin</a>
+                </div>
             </div>
         </div>
     </div>
 
     {% else %}
-    <!-- ==================== HALAMAN UTAMA PARKIR ==================== -->
+    <!-- ==================== 4. HALAMAN UTAMA PENGUNJUNG (2 LOKASI MALL + DENAH) ==================== -->
     <div class="wrapper" id="appContext"
          data-is-member="{{ 'true' if is_member else 'false' }}"
          data-user-nama="{{ user if is_member else '' }}"
          data-user-hp="{{ no_hp }}"
          data-user-plat="{{ plat_member }}">
 
-        <!-- Header Utama -->
         <header class="hero-header animate-fade-down">
             <div class="brand">
                 <div class="logo-box">P</div>
                 <div>
                     <div class="badge-row">
-                        <span class="badge-live"><span class="pulse-dot"></span> LIVE CLOUD SYNC (SUPABASE)</span>
+                        <span class="badge-live"><span class="pulse-dot"></span> SMART PARKING NETWORK</span>
                         {% if is_member %}
                         <span class="badge-member-hero">👑 MEMBER AKTIF • DISKON 10%</span>
                         {% else %}
@@ -146,7 +331,7 @@
                         {% endif %}
                     </div>
                     <h1>Smart Parking System</h1>
-                    <p>Klik slot kosong (hijau) untuk pilih tempat parkir, cek harga & lakukan pembayaran</p>
+                    <p>{{ mall_info.nama }} — {{ mall_info.subjudul }}</p>
                 </div>
             </div>
             <div class="header-right">
@@ -159,8 +344,8 @@
                     <span>Pengunjung Non-Member</span>
                     {% endif %}
                     <a href="/?logout=1" class="btn-logout">Ganti Akun</a>
+                    <a href="/?admin=1" class="btn-admin-chip">🛡️ Admin</a>
                 </div>
-                <!-- Hari, Tanggal, Tahun & Jam Real-Time -->
                 <div class="datetime-box">
                     <span id="liveDate">📅 Memuat hari & tanggal...</span>
                     <span class="dt-sep">|</span>
@@ -169,13 +354,25 @@
             </div>
         </header>
 
-        <!-- Kartu Ringkasan Kapasitas -->
+        <!-- Pilihan Lokasi Mall Kerja Sama -->
+        <div class="mall-switcher-bar animate-fade-up">
+            <span>📍 Pilih Lokasi Parkir Mall:</span>
+            <div class="mall-tabs">
+                <a href="/?mall=MALL_A" class="mall-tab-btn {{ 'active' if mall_info.id == 'MALL_A' else '' }}">
+                    🏢 Mall A — Grand Central <small>(2 Lantai • 20 Slot)</small>
+                </a>
+                <a href="/?mall=MALL_B" class="mall-tab-btn {{ 'active' if mall_info.id == 'MALL_B' else '' }}">
+                    🏬 Mall B — Plaza Sentral <small>(1 Lantai • 12 Slot)</small>
+                </a>
+            </div>
+        </div>
+
         <section class="stats-grid animate-fade-up">
             <div class="stat-card card-total">
                 <div class="stat-icon">🏢</div>
                 <div class="stat-info">
-                    <span>Total Kapasitas</span>
-                    <h2>{{ total_slot }} <small>Slot</small></h2>
+                    <span>Kapasitas {{ mall_info.id.replace('_', ' ') }}</span>
+                    <h2>{{ total_slot }} <small>Slot ({{ mall_info.jumlah_lantai }} Lantai)</small></h2>
                 </div>
             </div>
             <div class="stat-card card-kosong">
@@ -194,105 +391,252 @@
             </div>
         </section>
 
-        <!-- Progress Bar Okupansi -->
-        {% set persen = ((jumlah_terisi / total_slot) * 100) | round | int %}
-        <div class="occupancy-bar-wrap animate-fade-up">
-            <div class="occupancy-label">
-                <span>Tingkat Okupansi Parkir Zona A</span>
-                <strong>{{ persen }}% Terisi ({{ jumlah_kosong }} Slot Tersisa)</strong>
-            </div>
-            <div class="progress-track">
-                <div class="progress-fill" style="width: {{ persen }}%;"></div>
-            </div>
-        </div>
-
-        {% if jumlah_kosong == 0 %}
-        <div class="alert-full">
-            ⚠️ <strong>AREA PARKIR PENUH!</strong> Tidak ada slot kosong tersedia saat ini.
-        </div>
-        {% endif %}
-
-        <!-- Layout Utama -->
         <div class="main-grid">
-            <!-- Denah 20 Slot Parkir -->
+            <!-- Denah Visual Interaktif Beranimasi -->
             <section class="panel map-panel animate-fade-up">
                 <div class="panel-header">
                     <div>
-                        <h3>Denah Slot Parkir (Zona A)</h3>
-                        <p>Klik slot <strong>KOSONG</strong> untuk reservasi & pembayaran</p>
+                        <h3>Denah Arsitektur — {{ mall_info.nama }}</h3>
+                        <p>{{ mall_info.subjudul }} • Klik petak parkir hijau untuk reservasi</p>
                     </div>
                     <div class="legend">
                         <span class="leg-item"><i class="dot-green"></i> Kosong</span>
-                        <span class="leg-item"><i class="dot-red"></i> Terisi (Lunas/Booked)</span>
+                        <span class="leg-item"><i class="dot-red"></i> Terisi</span>
                     </div>
                 </div>
 
-                <div class="road-lane">
-                    <span>➔ JALUR MASUK KENDARAAN (GATE IN) — KLIK SLOT HIJAU UNTUK BOOKING</span>
+                {% if mall_info.jumlah_lantai == 2 %}
+                <div class="floor-tabs-bar">
+                    <button type="button" id="btnTabLantai1" class="floor-tab-btn active" onclick="pilihLantaiUser(1)">
+                        🏢 Lantai 1 • Denah Koridor Utama (A1–A10)
+                    </button>
+                    <button type="button" id="btnTabLantai2" class="floor-tab-btn" onclick="pilihLantaiUser(2)">
+                        ⏫ Lantai 2 • Denah Sky-Deck Atas (B1–B10)
+                    </button>
                 </div>
+                {% endif %}
 
-                <div class="slots-grid">
-                    {% for slot in slots %}
-                        {% if slot.status == 'KOSONG' %}
-                        <div class="slot-box slot-kosong" onclick="bukaModalParkir('{{ slot.kode }}')" title="Klik untuk reservasi Slot {{ slot.kode }}">
-                            <div class="slot-top">
-                                <span class="slot-code">{{ slot.kode }}</span>
-                                <span class="status-pill pill-green">KOSONG</span>
-                            </div>
-                            <div class="slot-body">
-                                <div class="empty-plus">+</div>
-                                <small>Klik untuk booking</small>
-                            </div>
-                        </div>
-                        {% else %}
-                        <div class="slot-box slot-terisi">
-                            <div class="slot-top">
-                                <span class="slot-code">{{ slot.kode }}</span>
-                                <span class="status-pill pill-red">TERISI</span>
-                            </div>
-                            <div class="slot-body">
-                                <div class="car-anim">🚘</div>
-                                <strong class="plat-badge">{{ slot.plat_nomor }}</strong>
-                                <div class="slot-meta">{{ slot.nama }} • {{ slot.tarif }}</div>
-                            </div>
-                            <form method="POST" action="/" class="exit-form">
-                                <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
-                                <button type="submit" class="btn-keluar" onclick="return confirm('Selesaikan parkir mobil {{ slot.plat_nomor }} di Slot {{ slot.kode }}?')">
-                                    Keluar (Gate Out)
-                                </button>
-                            </form>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </section>
-
-            <!-- Kolom Kanan: Info Status Akun & Riwayat -->
-            <aside class="side-column animate-fade-up">
-                <div class="panel tariff-info-panel">
-                    <h3>Status & Tarif Anda</h3>
-                    {% if is_member %}
-                    <div class="member-banner-card">
-                        <strong>👑 Member Aktif: {{ user }}</strong>
-                        <span>No. HP: {{ no_hp }} | Plat Terdaftar: <b>{{ plat_member }}</b></span>
-                        <small>Anda mendapat potongan otomatis <b>10%</b> di setiap transaksi!</small>
+                {% for lt in lantai_data %}
+                <div id="userFloor_{{ loop.index }}" class="floor-container animate-floor-switch" style="{{ 'display:none;' if loop.index > 1 else '' }}">
+                    <div class="blueprint-top-bar">
+                        <span class="gate-badge gate-in">🟢 GATE IN</span>
+                        <span class="floor-title-tag">🗺️ {{ lt.nama|upper }}</span>
+                        <span class="gate-badge gate-out">🔴 GATE OUT</span>
                     </div>
+
+                    {% if mall_info.id == 'MALL_A' and loop.index == 1 %}
+                    <!-- DENAH MALL A LANTAI 1 (KORIDOR TENGAH) -->
+                    <div class="parking-blueprint blueprint-corridor">
+                        <div class="bp-row-label">BLOK UTARA • PARKIR MUNDUR (90°)</div>
+                        <div class="bp-slot-row-5">
+                            {% for slot in lt.slots[:5] %}
+                                {% if slot.status == 'KOSONG' %}
+                                <div class="bp-bay bay-kosong bay-top" onclick="bukaModalParkir('{{ slot.kode }}')">
+                                    <span class="sensor-led led-green"></span>
+                                    <span class="bp-code">{{ slot.kode }}</span>
+                                    <div class="bp-plus">+</div>
+                                    <small>KOSONG</small>
+                                </div>
+                                {% else %}
+                                <div class="bp-bay bay-terisi bay-top">
+                                    <span class="sensor-led led-red"></span>
+                                    <span class="bp-code">{{ slot.kode }}</span>
+                                    <div class="bp-car-top">🚘</div>
+                                    <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
+                                    {% if slot.waktu_habis %}
+                                    <form method="POST" action="/">
+                                        <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                        <input type="hidden" name="jenis_keluar" value="selesai">
+                                        <button type="submit" class="bp-btn-done">Selesai</button>
+                                    </form>
+                                    {% else %}
+                                    <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <div class="asphalt-road">
+                            <div class="road-arrows">➔ &nbsp;&nbsp; ➔ &nbsp;&nbsp; ➔ &nbsp;&nbsp; JALUR SIRKULASI UTAMA LANTAI 1 &nbsp;&nbsp; ➔ &nbsp;&nbsp; ➔</div>
+                            <div class="road-dashed-line"></div>
+                            <div class="moving-car-lane">🚗</div>
+                        </div>
+
+                        <div class="bp-slot-row-5">
+                            {% for slot in lt.slots[5:10] %}
+                                {% if slot.status == 'KOSONG' %}
+                                <div class="bp-bay bay-kosong bay-bottom" onclick="bukaModalParkir('{{ slot.kode }}')">
+                                    <span class="sensor-led led-green"></span>
+                                    <span class="bp-code">{{ slot.kode }}</span>
+                                    <div class="bp-plus">+</div>
+                                    <small>KOSONG</small>
+                                </div>
+                                {% else %}
+                                <div class="bp-bay bay-terisi bay-bottom">
+                                    <span class="sensor-led led-red"></span>
+                                    <span class="bp-code">{{ slot.kode }}</span>
+                                    <div class="bp-car-top">🚘</div>
+                                    <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
+                                    {% if slot.waktu_habis %}
+                                    <form method="POST" action="/">
+                                        <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                        <input type="hidden" name="jenis_keluar" value="selesai">
+                                        <button type="submit" class="bp-btn-done">Selesai</button>
+                                    </form>
+                                    {% else %}
+                                    <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div class="bp-row-label">BLOK SELATAN • DEKAT LOBBY LIFT MALL A</div>
+                    </div>
+
+                    {% elif mall_info.id == 'MALL_A' and loop.index == 2 %}
+                    <!-- DENAH MALL A LANTAI 2 (SKY-DECK & RAMP) -->
+                    <div class="parking-blueprint blueprint-skydeck">
+                        <div class="ramp-banner">
+                            <span>⤴️ RAMP NAIK DARI LANTAI 1</span>
+                            <span>•</span>
+                            <span>🌤️ ROOFTOP SKY-DECK LANTAI 2</span>
+                            <span>•</span>
+                            <span>⤵️ RAMP TURUN KELUAR</span>
+                        </div>
+
+                        <div class="skydeck-layout">
+                            <div class="skydeck-wing">
+                                <div class="bp-row-label">SAYAP BARAT (B1–B5)</div>
+                                <div class="bp-slot-row-5">
+                                    {% for slot in lt.slots[:5] %}
+                                        {% if slot.status == 'KOSONG' %}
+                                        <div class="bp-bay bay-kosong bay-top" onclick="bukaModalParkir('{{ slot.kode }}')">
+                                            <span class="sensor-led led-green"></span>
+                                            <span class="bp-code">{{ slot.kode }}</span>
+                                            <div class="bp-plus">+</div>
+                                            <small>KOSONG</small>
+                                        </div>
+                                        {% else %}
+                                        <div class="bp-bay bay-terisi bay-top">
+                                            <span class="sensor-led led-red"></span>
+                                            <span class="bp-code">{{ slot.kode }}</span>
+                                            <div class="bp-car-top">🚙</div>
+                                            <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
+                                            {% if slot.waktu_habis %}
+                                            <form method="POST" action="/">
+                                                <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                                <input type="hidden" name="jenis_keluar" value="selesai">
+                                                <button type="submit" class="bp-btn-done">Selesai</button>
+                                            </form>
+                                            {% else %}
+                                            <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="asphalt-road sky-road">
+                                <div class="road-arrows">🔄 ZONA U-TURN LANTAI 2 &nbsp; ➔ &nbsp; ➔ &nbsp; AKSES JEMBATAN SKYBRIDGE</div>
+                                <div class="road-dashed-line"></div>
+                                <div class="moving-car-lane car-reverse">🚙</div>
+                            </div>
+
+                            <div class="skydeck-wing">
+                                <div class="bp-row-label">SAYAP TIMUR (B6–B10)</div>
+                                <div class="bp-slot-row-5">
+                                    {% for slot in lt.slots[5:10] %}
+                                        {% if slot.status == 'KOSONG' %}
+                                        <div class="bp-bay bay-kosong bay-bottom" onclick="bukaModalParkir('{{ slot.kode }}')">
+                                            <span class="sensor-led led-green"></span>
+                                            <span class="bp-code">{{ slot.kode }}</span>
+                                            <div class="bp-plus">+</div>
+                                            <small>KOSONG</small>
+                                        </div>
+                                        {% else %}
+                                        <div class="bp-bay bay-terisi bay-bottom">
+                                            <span class="sensor-led led-red"></span>
+                                            <span class="bp-code">{{ slot.kode }}</span>
+                                            <div class="bp-car-top">🚙</div>
+                                            <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
+                                            {% if slot.waktu_habis %}
+                                            <form method="POST" action="/">
+                                                <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                                <input type="hidden" name="jenis_keluar" value="selesai">
+                                                <button type="submit" class="bp-btn-done">Selesai</button>
+                                            </form>
+                                            {% else %}
+                                            <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {% else %}
-                    <div class="guest-banner-card">
-                        <strong>👤 Mode Pengunjung Tamu (Non-Member)</strong>
-                        <span>Tarif normal berlaku: Rp5.000 jam pertama + Rp3.000/jam berikutnya.</span>
+                    <!-- DENAH MALL B (1 LANTAI • PLAZA TERBUKA) -->
+                    <div class="parking-blueprint blueprint-plaza">
+                        <div class="asphalt-road plaza-top-road">
+                            <div class="road-arrows">➔ &nbsp;&nbsp; JALUR MASUK UTAMA PLAZA SENTRAL (1 LANTAI) &nbsp;&nbsp; ➔</div>
+                            <div class="road-dashed-line"></div>
+                            <div class="moving-car-lane">🚕</div>
+                        </div>
+
+                        <div class="plaza-islands-grid">
+                            {% for slot in lt.slots %}
+                                {% if slot.status == 'KOSONG' %}
+                                <div class="bp-bay bay-kosong bay-plaza" onclick="bukaModalParkir('{{ slot.kode }}')">
+                                    <span class="sensor-led led-green"></span>
+                                    <span class="bp-code">{{ slot.kode }}</span>
+                                    <div class="bp-plus">+</div>
+                                    <small>TERSEDIA</small>
+                                </div>
+                                {% else %}
+                                <div class="bp-bay bay-terisi bay-plaza">
+                                    <span class="sensor-led led-red"></span>
+                                    <span class="bp-code">{{ slot.kode }}</span>
+                                    <div class="bp-car-top">🚘</div>
+                                    <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
+                                    {% if slot.waktu_habis %}
+                                    <form method="POST" action="/">
+                                        <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                        <input type="hidden" name="jenis_keluar" value="selesai">
+                                        <button type="submit" class="bp-btn-done">Selesai</button>
+                                    </form>
+                                    {% else %}
+                                    <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <div class="plaza-pedestrian-walk">
+                            <span>🚶 ZONA PEJALAN KAKI & PINTU MASUK LOBBY UTAMA MALL B</span>
+                        </div>
                     </div>
                     {% endif %}
+                </div>
+                {% endfor %}
+            </section>
 
-                    <div class="tariff-hint" style="margin-top: 12px;">
-                        💡 <strong>Alur Booking:</strong> Klik slot hijau ➔ cek harga ➔ pilih bayar <b>QRIS</b> atau <b>Kasir</b> ➔ slot otomatis ter-booking!
+            <!-- Kolom Kanan: Info Aturan Waktu & Daftar Booking -->
+            <aside class="side-column animate-fade-up">
+                <div class="panel tariff-info-panel">
+                    <h3>Aturan Durasi & Pembatalan</h3>
+                    <div class="tariff-hint">
+                        ⏱️ <strong>Kunci Waktu Aktif:</strong> Slot yang sedang berjalan tidak dapat diselesaikan sebelum durasi parkir berakhir. Jika dibatalkan lebih awal, <b>uang yang sudah dibayar tidak akan kembali</b>.
                     </div>
                 </div>
 
-                <!-- Riwayat Kendaraan Terbooking -->
                 <div class="panel history-panel">
                     <div class="history-head">
-                        <h3>Kendaraan Terparkir (Booked)</h3>
+                        <h3>Booking Aktif ({{ mall_info.id.replace('_', ' ') }})</h3>
                         <span class="count-badge">{{ daftar_data|length }}</span>
                     </div>
 
@@ -300,18 +644,26 @@
                         {% for item in daftar_data %}
                         <div class="log-card">
                             <div class="log-info">
-                                <strong>{{ item.plat_nomor }}</strong>
-                                <p>{{ item.keterangan }}</p>
+                                <strong>{{ item.plat_nomor }} • Slot {{ item.kode_slot }}</strong>
+                                <p>{{ item.nama }} • {{ item.tarif }} • Selesai {{ item.jam_selesai }} (<b>{{ item.sisa_waktu }}</b>)</p>
                             </div>
+                            {% if item.waktu_habis %}
                             <form method="POST" action="/">
                                 <input type="hidden" name="keluar_id" value="{{ item.id }}">
-                                <button type="submit" class="btn-mini-out">Selesai</button>
+                                <input type="hidden" name="jenis_keluar" value="selesai">
+                                <button type="submit" class="btn-selesai-mini">Selesai</button>
                             </form>
+                            {% else %}
+                            <button type="button" class="btn-mini-out"
+                                    onclick="bukaModalBatal('{{ item.id }}', '{{ item.kode_slot }}', '{{ item.plat_nomor }}', '{{ item.tarif }}', '{{ item.sisa_waktu }}')">
+                                Batalkan
+                            </button>
+                            {% endif %}
                         </div>
                         {% else %}
                         <div class="empty-state">
                             <span>🅿️</span>
-                            <p>Belum ada slot yang di-booking. Klik slot hijau untuk memulai.</p>
+                            <p>Belum ada slot terbooking di {{ mall_info.nama }}.</p>
                         </div>
                         {% endfor %}
                     </div>
@@ -320,12 +672,12 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL 2 LANGKAH: DATA & PEMBAYARAN ==================== -->
+    <!-- ==================== MODAL BOOKING 2 LANGKAH ==================== -->
     <div id="modalParkir" class="modal-overlay" onclick="tutupModalLuar(event)">
         <div class="modal-box animate-pop">
             <div class="modal-header">
                 <div>
-                    <span class="modal-tag" id="modalStepTag">LANGKAH 1 OF 2 • DATA KENDARAAN</span>
+                    <span class="modal-tag" id="modalStepTag">LANGKAH 1 OF 2 • {{ mall_info.nama|upper }}</span>
                     <h3 id="modalTitle">Booking Slot A1</h3>
                 </div>
                 <button type="button" class="btn-close-modal" onclick="tutupModalParkir()">✕</button>
@@ -335,23 +687,19 @@
                 <input type="hidden" id="slot_pilihan" name="slot_pilihan" value="A1">
                 <input type="hidden" id="metode_bayar" name="metode_bayar" value="QRIS">
 
-                <!-- LANGKAH 1: FORM DATA & RINCIAN HARGA -->
                 <div id="stepData">
                     {% if is_member %}
                     <div class="member-detect-badge">
                         👑 <strong>Member Terdeteksi!</strong> Diskon 10% otomatis diterapkan.
                     </div>
-
                     <div class="form-group">
                         <label for="nama_pengendara">Nama Member</label>
                         <input type="text" id="nama_pengendara" name="nama_pengendara" value="{{ user }}" required>
                     </div>
-
                     <div class="form-group">
                         <label for="no_hp_booking">Nomor HP Member</label>
                         <input type="tel" id="no_hp_booking" name="no_hp" value="{{ no_hp }}" required>
                     </div>
-
                     <div class="form-group">
                         <label>Pilihan Plat Kendaraan</label>
                         <div class="plat-choice-tabs">
@@ -369,12 +717,10 @@
                         <label for="nama_pengendara">Nama Pengendara</label>
                         <input type="text" id="nama_pengendara" name="nama_pengendara" placeholder="Masukkan nama lengkap..." required>
                     </div>
-
                     <div class="form-group">
                         <label for="no_hp_booking">Nomor HP</label>
                         <input type="tel" id="no_hp_booking" name="no_hp" placeholder="Contoh: 081234567890" required>
                     </div>
-
                     <div class="form-group">
                         <label for="plat_nomor">Plat Kendaraan</label>
                         <input type="text" id="plat_nomor" name="plat_nomor" placeholder="Contoh: B 1234 XYZ" required autocomplete="off">
@@ -382,7 +728,7 @@
                     {% endif %}
 
                     <div class="form-group">
-                        <label for="durasi">Durasi Parkir</label>
+                        <label for="durasi">Durasi Parkir (Terkunci Selama Durasi Berjalan)</label>
                         <select id="durasi" name="durasi" onchange="updateTarifModal()">
                             <option value="1" selected>1 Jam</option>
                             <option value="2">2 Jam</option>
@@ -395,7 +741,6 @@
                         </select>
                     </div>
 
-                    <!-- Rincian Tarif -->
                     <div class="tariff-preview-box">
                         <div class="tp-row">
                             <span>Tarif Normal</span>
@@ -417,7 +762,6 @@
                     </div>
                 </div>
 
-                <!-- LANGKAH 2: PEMBAYARAN QRIS / KASIR -->
                 <div id="stepPayment" style="display: none;">
                     <div class="pay-summary-banner">
                         <span>Total Tagihan Slot <b id="paySlotLabel">A1</b></span>
@@ -438,7 +782,6 @@
                         </div>
                     </div>
 
-                    <!-- Box QRIS Animasi -->
                     <div id="qrisBox" class="qris-display-box">
                         <div class="qr-frame">
                             <div class="qr-scan-line"></div>
@@ -458,13 +801,12 @@
                                 <rect x="68" y="70" width="24" height="24" fill="#0f172a"/>
                             </svg>
                         </div>
-                        <p>Scan QRIS di atas dengan GoPay / OVO / DANA / M-Banking, lalu klik konfirmasi di bawah.</p>
+                        <p>Scan QRIS di atas dengan GoPay / OVO / DANA / M-Banking, lalu klik konfirmasi.</p>
                     </div>
 
-                    <!-- Box Info Kasir -->
                     <div id="kasirBox" class="kasir-display-box" style="display: none;">
                         <span>🧾</span>
-                        <p>Kode booking akan diterbitkan. Pembayaran tunai/kartu dilakukan di loket <strong>Kasir Gate Out</strong> saat keluar.</p>
+                        <p>Kode booking akan diterbitkan. Pembayaran dilakukan di loket <strong>Kasir Gate Out</strong>.</p>
                     </div>
 
                     <div class="modal-actions" style="margin-top: 16px;">
@@ -474,6 +816,36 @@
                         </button>
                     </div>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL PERINGATAN PEMBATALAN (ANIMASI MERAH) ==================== -->
+    <div id="modalBatal" class="modal-overlay" onclick="if(event.target.id==='modalBatal') tutupModalBatal()">
+        <div class="modal-box cancel-warning-modal animate-shake-pop">
+            <div class="warning-pulse-ring">
+                <span>⚠️</span>
+            </div>
+            <h3>Batalkan Booking Parkir?</h3>
+            <p class="cancel-slot-info">
+                Slot <strong id="batalKodeSlot">A1</strong> • Plat <strong id="batalPlat">B 1234 XYZ</strong><br>
+                Sisa waktu parkir: <span id="batalSisaWaktu">1j 30m lagi</span>
+            </p>
+
+            <div class="non-refundable-alert">
+                <strong>🚫 PERHATIAN: UANG TIDAK AKAN KEMBALI!</strong>
+                <p>Durasi parkir Anda belum habis. Jika Anda membatalkan booking sekarang, biaya sebesar <strong id="batalNominal">Rp5.000</strong> yang telah dibayarkan dinyatakan <b>hangus (Non-Refundable)</b> dan slot akan langsung dikosongkan.</p>
+            </div>
+
+            <form method="POST" action="/" class="cancel-modal-actions">
+                <input type="hidden" id="batalKeluarId" name="keluar_id" value="">
+                <input type="hidden" name="jenis_keluar" value="batal">
+                <button type="button" class="btn-keep-parking" onclick="tutupModalBatal()">
+                    ← Tetap Lanjutkan Parkir
+                </button>
+                <button type="submit" class="btn-confirm-forfeit">
+                    🗑️ Ya, Batalkan (Uang Hangus)
+                </button>
             </form>
         </div>
     </div>
