@@ -1,6 +1,7 @@
 import os
 import re
-from flask import Flask, render_template, request, redirect, url_for, session, Response
+import traceback
+from flask import Flask, render_template, request, session, Response
 from flask_sqlalchemy import SQLAlchemy
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -36,69 +37,21 @@ class MemberParkir(db.Model):
     nama = db.Column(db.String(100), nullable=False)
     plat_nomor = db.Column(db.String(20), nullable=False)
 
-with app.app_context():
+def init_db_safe():
     try:
         db.create_all()
     except Exception as e:
-        print("Database init warning:", e)
+        print("DB Init Warning:", e)
 
 def hitung_tarif_akhir(durasi_jam, is_member=False):
     tarif_dasar = 5000 if durasi_jam <= 1 else 5000 + (durasi_jam - 1) * 3000
     if is_member:
-        diskon = int(tarif_dasar * 0.10)  # Diskon Member 10%
+        diskon = int(tarif_dasar * 0.10)
         return tarif_dasar, diskon, tarif_dasar - diskon
     return tarif_dasar, 0, tarif_dasar
 
-# Tangani permintaan otomatis /favicon.ico dari browser agar tidak error 500
-@app.route('/favicon.ico')
-def favicon():
-    return Response(status=204)
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        aksi = request.form.get('aksi', 'member')
-
-        if aksi == 'guest':
-            session['mode'] = 'guest'
-            session['nama'] = 'Pengunjung Tamu'
-            session['no_hp'] = ''
-            session['plat_member'] = ''
-            return render_dashboard()
-
-        no_hp = request.form.get('no_hp', '').strip()
-        nama = request.form.get('nama', '').strip()
-        plat = request.form.get('plat_nomor', '').strip().upper()
-
-        if no_hp and nama and plat:
-            member = MemberParkir.query.filter_by(no_hp=no_hp).first()
-            if member:
-                member.nama = nama
-                member.plat_nomor = plat
-            else:
-                member = MemberParkir(no_hp=no_hp, nama=nama, plat_nomor=plat)
-                db.session.add(member)
-            db.session.commit()
-
-            session['mode'] = 'member'
-            session['nama'] = member.nama
-            session['no_hp'] = member.no_hp
-            session['plat_member'] = member.plat_nomor
-            return render_dashboard()
-        else:
-            error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
-            return render_template('index.html', is_login_page=True, error=error)
-
-    if session.get('mode'):
-        return render_dashboard()
-    return render_template('index.html', is_login_page=True, error=None)
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return render_template('index.html', is_login_page=True, error=None)
-
 def render_dashboard():
+    init_db_safe()
     is_member = (session.get('mode') == 'member')
     daftar_data = DataParkir.query.order_by(DataParkir.id.desc()).all()
 
@@ -165,16 +118,74 @@ def render_dashboard():
         jumlah_terisi=jumlah_terisi
     )
 
-@app.route('/api/index.py', methods=['GET', 'POST'])
-@app.route('/api/index', methods=['GET', 'POST'])
-@app.route('/', methods=['GET', 'POST'])
-def home():
+@app.route('/favicon.ico')
+def favicon():
+    return Response(status=204)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    init_db_safe()
+    if request.method == 'POST':
+        aksi = request.form.get('aksi', 'member')
+
+        if aksi == 'guest':
+            session['mode'] = 'guest'
+            session['nama'] = 'Pengunjung Tamu'
+            session['no_hp'] = ''
+            session['plat_member'] = ''
+            return render_dashboard()
+
+        no_hp = request.form.get('no_hp', '').strip()
+        nama = request.form.get('nama', '').strip()
+        plat = request.form.get('plat_nomor', '').strip().upper()
+
+        if no_hp and nama and plat:
+            member = MemberParkir.query.filter_by(no_hp=no_hp).first()
+            if member:
+                member.nama = nama
+                member.plat_nomor = plat
+            else:
+                member = MemberParkir(no_hp=no_hp, nama=nama, plat_nomor=plat)
+                db.session.add(member)
+            db.session.commit()
+
+            session['mode'] = 'member'
+            session['nama'] = member.nama
+            session['no_hp'] = member.no_hp
+            session['plat_member'] = member.plat_nomor
+            return render_dashboard()
+        else:
+            error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
+            return render_template('index.html', is_login_page=True, error=error)
+
+    if session.get('mode'):
+        return render_dashboard()
+    return render_template('index.html', is_login_page=True, error=None)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return render_template('index.html', is_login_page=True, error=None)
+
+@app.route('/keluar/<int:id>', methods=['POST'])
+def kendaraan_keluar(id):
+    if not session.get('mode'):
+        return render_template('index.html', is_login_page=True, error=None)
+    data = DataParkir.query.get_or_404(id)
+    db.session.delete(data)
+    db.session.commit()
+    return render_dashboard()
+
+@app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
+@app.route('/<path:path>', methods=['GET', 'POST'])
+def catch_all(path):
     if not session.get('mode'):
         return render_template('index.html', is_login_page=True, error=None)
 
     is_member = (session.get('mode') == 'member')
 
     if request.method == 'POST':
+        init_db_safe()
         nama_pengendara = request.form.get('nama_pengendara', '').strip()
         no_hp = request.form.get('no_hp', '').strip()
         plat = request.form.get('plat_nomor', '').strip().upper()
@@ -198,11 +209,9 @@ def home():
 
     return render_dashboard()
 
-@app.route('/keluar/<int:id>', methods=['POST'])
-def kendaraan_keluar(id):
-    if not session.get('mode'):
-        return render_template('index.html', is_login_page=True, error=None)
-    data = DataParkir.query.get_or_404(id)
-    db.session.delete(data)
-    db.session.commit()
-    return render_dashboard()
+@app.errorhandler(Exception)
+def handle_exception(e):
+    return f"<pre>DETAIL ERROR:\n{traceback.format_exc()}</pre>", 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
