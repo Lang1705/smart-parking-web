@@ -1,62 +1,68 @@
-// 1. Update Hari, Tanggal, Tahun & Jam Digital Real-Time
-function updateClock() {
+// Jam & Tanggal Real-Time (WIB)
+function updateDateTimeLive() {
     const dateEl = document.getElementById('liveDate');
     const clockEl = document.getElementById('liveClock');
-    if (!dateEl && !clockEl) return;
+    if (!dateEl || !clockEl) return;
 
     const now = new Date();
-    const dateOptions = {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-    };
-    const timeOptions = {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    };
+    const hariList = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const bulanList = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
 
-    if (dateEl) {
-        dateEl.innerText = '📅 ' + now.toLocaleDateString('id-ID', dateOptions);
-    }
-    if (clockEl) {
-        clockEl.innerText = '🕒 ' + now.toLocaleTimeString('id-ID', timeOptions) + ' WIB';
-    }
+    const hari = hariList[now.getDay()];
+    const tanggal = now.getDate();
+    const bulan = bulanList[now.getMonth()];
+    const tahun = now.getFullYear();
+
+    const jam = String(now.getHours()).padStart(2, '0');
+    const menit = String(now.getMinutes()).padStart(2, '0');
+    const detik = String(now.getSeconds()).padStart(2, '0');
+
+    dateEl.textContent = `📅 ${hari}, ${tanggal} ${bulan} ${tahun}`;
+    clockEl.textContent = `🕒 ${jam}:${menit}:${detik} WIB`;
 }
-setInterval(updateClock, 1000);
-updateClock();
 
-// Ambil konteks status member dari atribut HTML
-const appCtx = document.getElementById('appContext');
-const isMember = appCtx ? appCtx.dataset.isMember === 'true' : false;
-const memberPlatTersimpan = appCtx ? appCtx.dataset.userPlat : '';
+setInterval(updateDateTimeLive, 1000);
+updateDateTimeLive();
 
-// 2. Buka Modal Pop-Up Saat Klik Kotak Tempat Parkir
+// Format Rupiah
+function formatRupiah(angka) {
+    return 'Rp' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// Hitung Tarif Dinamis di Modal
+function updateTarifModal() {
+    const durasiEl = document.getElementById('durasi');
+    if (!durasiEl) return;
+
+    const durasi = parseInt(durasiEl.value, 10) || 1;
+    const appCtx = document.getElementById('appContext');
+    const isMember = appCtx && appCtx.dataset.isMember === 'true';
+
+    const tarifNormal = durasi <= 1 ? 5000 : 5000 + (durasi - 1) * 3000;
+    const diskon = isMember ? Math.floor(tarifNormal * 0.10) : 0;
+    const totalBayar = tarifNormal - diskon;
+
+    document.getElementById('previewTarifNormal').textContent = formatRupiah(tarifNormal);
+    document.getElementById('previewDiskon').textContent = '- ' + formatRupiah(diskon);
+    document.getElementById('previewHarga').textContent = formatRupiah(totalBayar);
+    document.getElementById('payTotalBig').textContent = formatRupiah(totalBayar);
+}
+
+// Buka Modal saat Slot Hijau Diklik
 function bukaModalParkir(kodeSlot) {
     const modal = document.getElementById('modalParkir');
-    const slotInput = document.getElementById('slot_pilihan');
-    const modalTitle = document.getElementById('modalTitle');
-    const paySlotLabel = document.getElementById('paySlotLabel');
+    if (!modal) return;
 
-    if (slotInput) slotInput.value = kodeSlot;
-    if (modalTitle) modalTitle.innerText = 'Booking Slot ' + kodeSlot;
-    if (paySlotLabel) paySlotLabel.innerText = kodeSlot;
+    document.getElementById('slot_pilihan').value = kodeSlot;
+    document.getElementById('modalTitle').textContent = `Booking Slot ${kodeSlot}`;
+    document.getElementById('paySlotLabel').textContent = kodeSlot;
 
-    // Reset ke Langkah 1 (Data Kendaraan)
     kembaliKeData();
-
-    if (isMember) {
-        pilihModePlat('lama');
-    } else {
-        const platInput = document.getElementById('plat_nomor');
-        if (platInput) platInput.value = '';
-    }
-
     updateTarifModal();
-
-    if (modal) modal.classList.add('active');
+    modal.classList.add('active');
 }
 
 function tutupModalParkir() {
@@ -70,38 +76,69 @@ function tutupModalLuar(event) {
     }
 }
 
-// 3. Khusus Member: Pilih Pakai Plat Terdaftar atau Buat Plat Baru
+// Pilihan Plat Lama vs Plat Baru untuk Member
 function pilihModePlat(mode) {
+    const appCtx = document.getElementById('appContext');
+    const platInput = document.getElementById('plat_nomor');
     const btnLama = document.getElementById('btnPlatLama');
     const btnBaru = document.getElementById('btnPlatBaru');
-    const platInput = document.getElementById('plat_nomor');
-    if (!platInput) return;
+    if (!platInput || !appCtx) return;
 
     if (mode === 'lama') {
-        if (btnLama) btnLama.classList.add('active');
-        if (btnBaru) btnBaru.classList.remove('active');
-        platInput.value = memberPlatTersimpan;
+        platInput.value = appCtx.dataset.userPlat || '';
         platInput.readOnly = true;
+        btnLama.classList.add('active');
+        btnBaru.classList.remove('active');
     } else {
-        if (btnBaru) btnBaru.classList.add('active');
-        if (btnLama) btnLama.classList.remove('active');
         platInput.value = '';
         platInput.readOnly = false;
-        platInput.placeholder = 'Masukkan nomor plat baru...';
+        platInput.placeholder = 'Ketik plat kendaraan baru...';
         platInput.focus();
+        btnBaru.classList.add('active');
+        btnLama.classList.remove('active');
     }
 }
 
-// 4. Hitung Tarif Otomatis (Diskon 10% untuk Member)
-function updateTarifModal() {
-    const durasiEl = document.getElementById('durasi');
-    const normalEl = document.getElementById('previewTarifNormal');
-    const diskonEl = document.getElementById('previewDiskon');
-    const hargaEl = document.getElementById('previewHarga');
-    const payTotalBig = document.getElementById('payTotalBig');
-    if (!durasiEl || !hargaEl) return;
+// Navigasi Langkah 1 -> Langkah 2 (Pembayaran)
+function lanjutKePembayaran() {
+    const nama = document.getElementById('nama_pengendara').value.trim();
+    const hp = document.getElementById('no_hp_booking').value.trim();
+    const plat = document.getElementById('plat_nomor').value.trim();
 
-    const jam = parseInt(durasiEl.value, 10) || 1;
-    const tarifNormal = jam <= 1 ? 5000 : 5000 + (jam - 1) * 3000;
-    const diskon = isMember ? Math.round(tarifNormal * 0.10) : 0;
-    const totalAkhir = tarif
+    if (!nama || !hp || !plat) {
+        alert('Mohon lengkapi Nama, Nomor HP, dan Plat Kendaraan terlebih dahulu!');
+        return;
+    }
+
+    updateTarifModal();
+    document.getElementById('stepData').style.display = 'none';
+    document.getElementById('stepPayment').style.display = 'block';
+    document.getElementById('modalStepTag').textContent = 'LANGKAH 2 OF 2 • PEMBAYARAN';
+}
+
+function kembaliKeData() {
+    document.getElementById('stepData').style.display = 'block';
+    document.getElementById('stepPayment').style.display = 'none';
+    document.getElementById('modalStepTag').textContent = 'LANGKAH 1 OF 2 • DATA KENDARAAN';
+}
+
+// Pilih Metode Bayar QRIS vs Kasir
+function pilihMetodeBayar(metode) {
+    document.getElementById('metode_bayar').value = metode;
+    const cardQris = document.getElementById('cardQris');
+    const cardKasir = document.getElementById('cardKasir');
+    const qrisBox = document.getElementById('qrisBox');
+    const kasirBox = document.getElementById('kasirBox');
+
+    if (metode === 'QRIS') {
+        cardQris.classList.add('active');
+        cardKasir.classList.remove('active');
+        qrisBox.style.display = 'block';
+        kasirBox.style.display = 'none';
+    } else {
+        cardKasir.classList.add('active');
+        cardQris.classList.remove('active');
+        kasirBox.style.display = 'block';
+        qrisBox.style.display = 'none';
+    }
+}
