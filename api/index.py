@@ -118,51 +118,53 @@ def render_dashboard():
         jumlah_terisi=jumlah_terisi
     )
 
+def proses_form_login():
+    init_db_safe()
+    aksi = request.form.get('aksi', 'member')
+
+    if aksi == 'guest':
+        session['mode'] = 'guest'
+        session['nama'] = 'Pengunjung Tamu'
+        session['no_hp'] = ''
+        session['plat_member'] = ''
+        return render_dashboard()
+
+    no_hp = request.form.get('no_hp', '').strip()
+    nama = request.form.get('nama', '').strip()
+    plat = request.form.get('plat_nomor', '').strip().upper()
+
+    if no_hp and nama and plat:
+        member = MemberParkir.query.filter_by(no_hp=no_hp).first()
+        if member:
+            member.nama = nama
+            member.plat_nomor = plat
+        else:
+            member = MemberParkir(no_hp=no_hp, nama=nama, plat_nomor=plat)
+            db.session.add(member)
+        db.session.commit()
+
+        session['mode'] = 'member'
+        session['nama'] = member.nama
+        session['no_hp'] = member.no_hp
+        session['plat_member'] = member.plat_nomor
+        return render_dashboard()
+    else:
+        error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
+        return render_template('index.html', is_login_page=True, error=error)
+
 @app.route('/favicon.ico')
 def favicon():
     return Response(status=204)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    init_db_safe()
     if request.method == 'POST':
-        aksi = request.form.get('aksi', 'member')
-
-        if aksi == 'guest':
-            session['mode'] = 'guest'
-            session['nama'] = 'Pengunjung Tamu'
-            session['no_hp'] = ''
-            session['plat_member'] = ''
-            return render_dashboard()
-
-        no_hp = request.form.get('no_hp', '').strip()
-        nama = request.form.get('nama', '').strip()
-        plat = request.form.get('plat_nomor', '').strip().upper()
-
-        if no_hp and nama and plat:
-            member = MemberParkir.query.filter_by(no_hp=no_hp).first()
-            if member:
-                member.nama = nama
-                member.plat_nomor = plat
-            else:
-                member = MemberParkir(no_hp=no_hp, nama=nama, plat_nomor=plat)
-                db.session.add(member)
-            db.session.commit()
-
-            session['mode'] = 'member'
-            session['nama'] = member.nama
-            session['no_hp'] = member.no_hp
-            session['plat_member'] = member.plat_nomor
-            return render_dashboard()
-        else:
-            error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
-            return render_template('index.html', is_login_page=True, error=error)
-
+        return proses_form_login()
     if session.get('mode'):
         return render_dashboard()
     return render_template('index.html', is_login_page=True, error=None)
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear()
     return render_template('index.html', is_login_page=True, error=None)
@@ -179,13 +181,30 @@ def kendaraan_keluar(id):
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def catch_all(path):
+    # Tangani tombol Ganti Akun (Logout) meskipun terkena rewrite Vercel
+    if request.args.get('logout') == '1' or request.form.get('aksi') == 'logout':
+        session.clear()
+        return render_template('index.html', is_login_page=True, error=None)
+
+    # Jika belum login
     if not session.get('mode'):
+        if request.method == 'POST' and request.form.get('aksi'):
+            return proses_form_login()
         return render_template('index.html', is_login_page=True, error=None)
 
     is_member = (session.get('mode') == 'member')
 
     if request.method == 'POST':
         init_db_safe()
+        # Tangani kendaraan keluar (Gate Out)
+        if request.form.get('keluar_id'):
+            data = DataParkir.query.get(int(request.form.get('keluar_id')))
+            if data:
+                db.session.delete(data)
+                db.session.commit()
+            return render_dashboard()
+
+        # Tangani booking slot baru
         nama_pengendara = request.form.get('nama_pengendara', '').strip()
         no_hp = request.form.get('no_hp', '').strip()
         plat = request.form.get('plat_nomor', '').strip().upper()
