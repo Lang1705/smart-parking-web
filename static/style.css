@@ -1,4 +1,319 @@
-/* Lencana Member di Hero Header & Kotak Hari/Tanggal/Tahun/Jam */
+:root {
+    --bg-main: #0f172a;
+    --card-bg: rgba(255, 255, 255, 0.96);
+    --text-dark: #0f172a;
+    --text-muted: #64748b;
+    --primary: #4f46e5;
+    --green-bg: #ecfdf5;
+    --green-border: #10b981;
+    --green-text: #047857;
+    --red-bg: #fef2f2;
+    --red-border: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    color: var(--text-dark);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    z-index: 0;
+    pointer-events: none;
+    animation: floatOrb 10s ease-in-out infinite alternate;
+}
+
+.orb-1 {
+    width: 380px;
+    height: 380px;
+    background: rgba(79, 70, 229, 0.35);
+    top: -80px;
+    left: -80px;
+}
+
+.orb-2 {
+    width: 420px;
+    height: 420px;
+    background: rgba(16, 185, 129, 0.25);
+    bottom: -100px;
+    right: -80px;
+    animation-delay: 2s;
+}
+
+@keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30px, 25px) scale(1.1); }
+}
+
+/* ==================== HALAMAN LOGIN ==================== */
+.login-wrapper {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+}
+
+.login-card {
+    max-width: 1000px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 26px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.42);
+}
+
+.login-visual {
+    background: linear-gradient(155deg, #1e1b4b 0%, #1e3a8a 60%, #0f172a 100%);
+    color: #ffffff;
+    padding: 36px 34px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.visual-badge {
+    display: inline-block;
+    width: fit-content;
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 99px;
+}
+
+.login-visual h2 {
+    font-size: 25px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 14px 0 10px;
+}
+
+.login-visual p {
+    font-size: 13.5px;
+    color: #cbd5e1;
+    line-height: 1.6;
+}
+
+.benefit-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.benefit-pills span {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 5px 11px;
+    border-radius: 99px;
+    color: #e0f2fe;
+}
+
+.car-scene {
+    margin-top: 24px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 18px;
+    padding: 16px 16px 12px;
+    text-align: center;
+    overflow: hidden;
+}
+
+.parking-gate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    color: #6ee7b7;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 99px;
+    margin-bottom: 6px;
+}
+
+.hero-car-svg {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    animation: carBounceDrive 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes carBounceDrive {
+    0% { transform: translateX(-10px) translateY(0px); }
+    50% { transform: translateX(2px) translateY(-2px); }
+    100% { transform: translateX(12px) translateY(0px); }
+}
+
+.wheel-spin {
+    animation: spinWheel 1.4s linear infinite;
+}
+
+@keyframes spinWheel {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.road-strip-anim {
+    height: 4px;
+    width: 200%;
+    background: repeating-linear-gradient(90deg, #facc15 0px, #facc15 20px, transparent 20px, transparent 38px);
+    margin-top: 4px;
+    animation: moveRoad 1.2s linear infinite;
+}
+
+@keyframes moveRoad {
+    from { transform: translateX(0); }
+    to { transform: translateX(-38px); }
+}
+
+.login-form-side {
+    padding: 34px 34px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.login-brand h3 {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.login-brand span {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.login-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-bottom: 14px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.divider-or {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 16px 0;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.divider-or::before, .divider-or::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px dashed #cbd5e1;
+}
+
+.divider-or span {
+    padding: 0 10px;
+}
+
+.btn-guest-enter {
+    width: 100%;
+    background: #f1f5f9;
+    border: 1.5px solid #cbd5e1;
+    color: #1e293b;
+    padding: 13px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-guest-enter:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+}
+
+/* ==================== HALAMAN UTAMA ==================== */
+.wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-header {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(49, 46, 129, 0.9));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 20px 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 22px;
+    color: #ffffff;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #3b82f6, #10b981);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+}
+
 .badge-row {
     display: flex;
     flex-wrap: wrap;
@@ -8,7 +323,16 @@
 }
 
 .badge-live {
-    margin-bottom: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #6ee7b7;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 99px;
 }
 
 .badge-member-hero {
@@ -37,25 +361,6 @@
     border-radius: 99px;
 }
 
-.datetime-box {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    background: rgba(15, 23, 42, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    padding: 8px 14px;
-    border-radius: 12px;
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #f8fafc;
-}
-
-.datetime-box .dt-sep {
-    color: #64748b;
-}
-
-#liveClock {
-    color: #34d399;
-    font-variant-numeric: tabular-nums;
-}
+.pulse-dot {
+    width: 8px;
+    height: 8
