@@ -1,35 +1,36 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Parking System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Smart Parking Log</h1>
-        <p class="subtitle">Terhubung langsung ke Supabase PostgreSQL & pgAdmin</p>
-
-        <form method="POST" id="formParkir">
-            <input type="text" name="plat_nomor" placeholder="Nomor Plat (Contoh: B 1234 XYZ)" required>
-            <input type="text" name="keterangan" placeholder="Keterangan / Lokasi Slot..." required>
-            <button type="submit" id="btnSimpan">Simpan Data</button>
-        </form>
-
-        <h2>Riwayat Kendaraan ({{ daftar_data|length }})</h2>
-        <div class="list-data">
-            {% for item in daftar_data %}
-            <div class="card">
-                <strong>{{ item.plat_nomor }}</strong>
-                <p>{{ item.keterangan }}</p>
+<!-- Header Utama -->
+        <header class="hero-header animate-fade-down">
+            <div class="brand">
+                <div class="logo-box">P</div>
+                <div>
+                    <div class="badge-row">
+                        <span class="badge-live"><span class="pulse-dot"></span> LIVE CLOUD SYNC (SUPABASE)</span>
+                        {% if is_member %}
+                        <span class="badge-member-hero">👑 MEMBER AKTIF • DISKON 10%</span>
+                        {% else %}
+                        <span class="badge-guest-hero">👤 PENGUNJUNG NON-MEMBER</span>
+                        {% endif %}
+                    </div>
+                    <h1>Smart Parking System</h1>
+                    <p>Klik slot kosong (hijau) untuk pilih tempat parkir, cek harga & lakukan pembayaran</p>
+                </div>
             </div>
-            {% else %}
-            <p class="kosong">Belum ada data kendaraan tercatat.</p>
-            {% endfor %}
-        </div>
-    </div>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-</body>
-</html>
+            <div class="header-right">
+                <div class="user-chip">
+                    {% if is_member %}
+                    <span class="member-tag">👑 MEMBER</span>
+                    <span><strong>{{ user }}</strong> • {{ plat_member }}</span>
+                    {% else %}
+                    <span class="guest-tag">👤 TAMU</span>
+                    <span>Pengunjung Non-Member</span>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="btn-logout">Ganti Akun</a>
+                </div>
+                <!-- Hari, Tanggal, Tahun & Jam Real-Time -->
+                <div class="datetime-box">
+                    <span id="liveDate">📅 Memuat hari & tanggal...</span>
+                    <span class="dt-sep">|</span>
+                    <span id="liveClock">🕒 00:00:00 WIB</span>
+                </div>
+            </div>
+        </header>
