@@ -142,3 +142,43 @@ function pilihMetodeBayar(metode) {
         qrisBox.style.display = 'none';
     }
 }
+
+// Pindah Lantai 1 <-> Lantai 2 pada Mall A
+function pilihLantaiUser(nomorLantai) {
+    const lt1 = document.getElementById('userFloor_1');
+    const lt2 = document.getElementById('userFloor_2');
+    const btn1 = document.getElementById('btnTabLantai1');
+    const btn2 = document.getElementById('btnTabLantai2');
+    if (!lt1 || !lt2) return;
+
+    if (nomorLantai === 1) {
+        lt1.style.display = 'block';
+        lt2.style.display = 'none';
+        btn1.classList.add('active');
+        btn2.classList.remove('active');
+    } else {
+        lt1.style.display = 'none';
+        lt2.style.display = 'block';
+        btn2.classList.add('active');
+        btn1.classList.remove('active');
+    }
+}
+
+// Modal Peringatan Pembatalan Booking (Uang Tidak Kembali)
+function bukaModalBatal(idData, kodeSlot, platNomor, tarif, sisaWaktu) {
+    const modal = document.getElementById('modalBatal');
+    if (!modal) return;
+
+    document.getElementById('batalKeluarId').value = idData;
+    document.getElementById('batalKodeSlot').textContent = kodeSlot;
+    document.getElementById('batalPlat').textContent = platNomor;
+    document.getElementById('batalNominal').textContent = tarif;
+    document.getElementById('batalSisaWaktu').textContent = sisaWaktu;
+
+    modal.classList.add('active');
+}
+
+function tutupModalBatal() {
+    const modal = document.getElementById('modalBatal');
+    if (modal) modal.classList.remove('active');
+}
