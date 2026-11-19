@@ -56,10 +56,6 @@ def favicon():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if session.get('mode'):
-        return redirect(url_for('home'))
-
-    error = None
     if request.method == 'POST':
         aksi = request.form.get('aksi', 'member')
 
@@ -68,7 +64,7 @@ def login():
             session['nama'] = 'Pengunjung Tamu'
             session['no_hp'] = ''
             session['plat_member'] = ''
-            return redirect(url_for('home'))
+            return render_dashboard()
 
         no_hp = request.form.get('no_hp', '').strip()
         nama = request.form.get('nama', '').strip()
@@ -88,49 +84,22 @@ def login():
             session['nama'] = member.nama
             session['no_hp'] = member.no_hp
             session['plat_member'] = member.plat_nomor
-            return redirect(url_for('home'))
+            return render_dashboard()
         else:
             error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
+            return render_template('index.html', is_login_page=True, error=error)
 
-    return render_template('index.html', is_login_page=True, error=error)
+    if session.get('mode'):
+        return render_dashboard()
+    return render_template('index.html', is_login_page=True, error=None)
 
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return render_template('index.html', is_login_page=True, error=None)
 
-@app.route('/api/index.py', methods=['GET', 'POST'])
-@app.route('/api/index', methods=['GET', 'POST'])
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    if not session.get('mode'):
-        return redirect(url_for('login'))
-
+def render_dashboard():
     is_member = (session.get('mode') == 'member')
-
-    if request.method == 'POST':
-        nama_pengendara = request.form.get('nama_pengendara', '').strip()
-        no_hp = request.form.get('no_hp', '').strip()
-        plat = request.form.get('plat_nomor', '').strip().upper()
-        slot_pilihan = request.form.get('slot_pilihan', '').strip()
-        durasi = int(request.form.get('durasi', 1))
-        metode_bayar = request.form.get('metode_bayar', 'QRIS').strip()
-
-        if nama_pengendara and no_hp and plat and slot_pilihan:
-            _, diskon, total_bayar = hitung_tarif_akhir(durasi, is_member)
-            tarif_rp = f"Rp{total_bayar:,}".replace(",", ".")
-            status_member = "MEMBER (Diskon 10%)" if is_member else "NON-MEMBER"
-            status_bayar = "LUNAS VIA QRIS" if metode_bayar == "QRIS" else "BAYAR DI KASIR (TERVERIFIKASI)"
-
-            ket_lengkap = (
-                f"Slot {slot_pilihan} | {status_member} | Nama: {nama_pengendara} ({no_hp}) | "
-                f"Durasi: {durasi} Jam | Total: {tarif_rp} | {status_bayar}"
-            )
-            data_baru = DataParkir(plat_nomor=plat, keterangan=ket_lengkap)
-            db.session.add(data_baru)
-            db.session.commit()
-        return redirect(url_for('home'))
-
     daftar_data = DataParkir.query.order_by(DataParkir.id.desc()).all()
 
     semua_kode_slot = [f"A{i}" for i in range(1, 21)]
@@ -196,14 +165,44 @@ def home():
         jumlah_terisi=jumlah_terisi
     )
 
+@app.route('/api/index.py', methods=['GET', 'POST'])
+@app.route('/api/index', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    if not session.get('mode'):
+        return render_template('index.html', is_login_page=True, error=None)
+
+    is_member = (session.get('mode') == 'member')
+
+    if request.method == 'POST':
+        nama_pengendara = request.form.get('nama_pengendara', '').strip()
+        no_hp = request.form.get('no_hp', '').strip()
+        plat = request.form.get('plat_nomor', '').strip().upper()
+        slot_pilihan = request.form.get('slot_pilihan', '').strip()
+        durasi = int(request.form.get('durasi', 1))
+        metode_bayar = request.form.get('metode_bayar', 'QRIS').strip()
+
+        if nama_pengendara and no_hp and plat and slot_pilihan:
+            _, diskon, total_bayar = hitung_tarif_akhir(durasi, is_member)
+            tarif_rp = f"Rp{total_bayar:,}".replace(",", ".")
+            status_member = "MEMBER (Diskon 10%)" if is_member else "NON-MEMBER"
+            status_bayar = "LUNAS VIA QRIS" if metode_bayar == "QRIS" else "BAYAR DI KASIR (TERVERIFIKASI)"
+
+            ket_lengkap = (
+                f"Slot {slot_pilihan} | {status_member} | Nama: {nama_pengendara} ({no_hp}) | "
+                f"Durasi: {durasi} Jam | Total: {tarif_rp} | {status_bayar}"
+            )
+            data_baru = DataParkir(plat_nomor=plat, keterangan=ket_lengkap)
+            db.session.add(data_baru)
+            db.session.commit()
+
+    return render_dashboard()
+
 @app.route('/keluar/<int:id>', methods=['POST'])
 def kendaraan_keluar(id):
     if not session.get('mode'):
-        return redirect(url_for('login'))
+        return render_template('index.html', is_login_page=True, error=None)
     data = DataParkir.query.get_or_404(id)
     db.session.delete(data)
     db.session.commit()
-    return redirect(url_for('home'))
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    return render_dashboard()
