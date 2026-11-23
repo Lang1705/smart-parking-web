@@ -889,3 +889,33 @@
     <div id="modalBatal" class="modal-overlay" onclick="if(event.target.id==='modalBatal') tutupModalBatal()">
         <div class="modal-box cancel-warning-modal animate-shake-pop">
             <div class="warning-pulse-ring">
+                <span>⚠️</span>
+            </div>
+            <h3>Batalkan Booking Parkir?</h3>
+            <p class="cancel-slot-info">
+                Slot <strong id="batalKodeSlot">A1</strong> • Plat <strong id="batalPlat">B 1234 XYZ</strong><br>
+                Sisa waktu parkir: <span id="batalSisaWaktu">1j 30m lagi</span>
+            </p>
+
+            <div class="non-refundable-alert">
+                <strong>🚫 PERHATIAN: UANG TIDAK AKAN KEMBALI!</strong>
+                <p>Durasi parkir Anda belum habis. Jika Anda membatalkan booking sekarang, biaya sebesar <strong id="batalNominal">Rp5.000</strong> yang telah dibayarkan dinyatakan <b>hangus (Non-Refundable)</b> dan slot akan langsung dikosongkan.</p>
+            </div>
+
+            <form method="POST" action="/" class="cancel-modal-actions">
+                <input type="hidden" id="batalKeluarId" name="keluar_id" value="">
+                <input type="hidden" name="jenis_keluar" value="batal">
+                <button type="button" class="btn-keep-parking" onclick="tutupModalBatal()">
+                    ← Tetap Lanjutkan Parkir
+                </button>
+                <button type="submit" class="btn-confirm-forfeit">
+                    🗑️ Ya, Batalkan (Uang Hangus)
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <script src="/?asset=js"></script>
+</body>
+</html>
