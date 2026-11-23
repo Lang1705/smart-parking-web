@@ -14,7 +14,7 @@
     <div class="bg-orb orb-2"></div>
 
     {% if page_view == 'admin_login' %}
-    <!-- ==================== 1. HALAMAN LOGIN KHUSUS ADMIN ==================== -->
+    <!-- ==================== 1. HALAMAN LOGIN KHUSUS ADMIN (TEMA TERANG) ==================== -->
     <div class="login-wrapper animate-fade-up">
         <div class="admin-login-card">
             <div class="admin-shield-icon">🛡️</div>
@@ -40,7 +40,7 @@
     </div>
 
     {% elif page_view == 'admin_dashboard' %}
-    <!-- ==================== 2. DASHBOARD KHUSUS ADMIN (DARK EXECUTIVE + NOTIF BATAL) ==================== -->
+    <!-- ==================== 2. DASHBOARD KHUSUS ADMIN (TEMA TERANG + NOTIF BATAL) ==================== -->
     <div class="wrapper" id="adminDashboardRoot">
         <header class="admin-header animate-fade-down">
             <div class="brand">
@@ -292,7 +292,6 @@
                         <div class="road-strip-anim"></div>
                     </div>
 
-                    <!-- Kredit Pengembang di Pojok Kiri Bawah -->
                     <div class="dev-credit-box">
                         <strong>develop by GN</strong>
                         <span>(Gilang &amp; Noval) still develop</span>
@@ -347,7 +346,7 @@
     </div>
 
     {% else %}
-    <!-- ==================== 4. HALAMAN UTAMA PENGUNJUNG (2 LOKASI MALL + DENAH) ==================== -->
+    <!-- ==================== 4. HALAMAN UTAMA PENGUNJUNG (KEPEMILIKAN TERKUNCI PER AKUN) ==================== -->
     <div class="wrapper" id="appContext"
          data-is-member="{{ 'true' if is_member else 'false' }}"
          data-user-nama="{{ user if is_member else '' }}"
@@ -474,19 +473,23 @@
                                     <small>KOSONG</small>
                                 </div>
                                 {% else %}
-                                <div class="bp-bay bay-terisi bay-top">
+                                <div class="bp-bay bay-terisi bay-top {{ 'bay-mine' if slot.is_owner else '' }}">
                                     <span class="sensor-led led-red"></span>
                                     <span class="bp-code">{{ slot.kode }}</span>
                                     <div class="bp-car-top">🚘</div>
                                     <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
-                                    {% if slot.waktu_habis %}
-                                    <form method="POST" action="/">
-                                        <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
-                                        <input type="hidden" name="jenis_keluar" value="selesai">
-                                        <button type="submit" class="bp-btn-done">Selesai</button>
-                                    </form>
+                                    {% if slot.is_owner %}
+                                        {% if slot.waktu_habis %}
+                                        <form method="POST" action="/">
+                                            <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                            <input type="hidden" name="jenis_keluar" value="selesai">
+                                            <button type="submit" class="bp-btn-done">Selesai</button>
+                                        </form>
+                                        {% else %}
+                                        <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                        {% endif %}
                                     {% else %}
-                                    <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                        <span class="bp-locked-tag">🔒 Terisi</span>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -509,19 +512,23 @@
                                     <small>KOSONG</small>
                                 </div>
                                 {% else %}
-                                <div class="bp-bay bay-terisi bay-bottom">
+                                <div class="bp-bay bay-terisi bay-bottom {{ 'bay-mine' if slot.is_owner else '' }}">
                                     <span class="sensor-led led-red"></span>
                                     <span class="bp-code">{{ slot.kode }}</span>
                                     <div class="bp-car-top">🚘</div>
                                     <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
-                                    {% if slot.waktu_habis %}
-                                    <form method="POST" action="/">
-                                        <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
-                                        <input type="hidden" name="jenis_keluar" value="selesai">
-                                        <button type="submit" class="bp-btn-done">Selesai</button>
-                                    </form>
+                                    {% if slot.is_owner %}
+                                        {% if slot.waktu_habis %}
+                                        <form method="POST" action="/">
+                                            <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                            <input type="hidden" name="jenis_keluar" value="selesai">
+                                            <button type="submit" class="bp-btn-done">Selesai</button>
+                                        </form>
+                                        {% else %}
+                                        <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                        {% endif %}
                                     {% else %}
-                                    <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                        <span class="bp-locked-tag">🔒 Terisi</span>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -554,19 +561,23 @@
                                             <small>KOSONG</small>
                                         </div>
                                         {% else %}
-                                        <div class="bp-bay bay-terisi bay-top">
+                                        <div class="bp-bay bay-terisi bay-top {{ 'bay-mine' if slot.is_owner else '' }}">
                                             <span class="sensor-led led-red"></span>
                                             <span class="bp-code">{{ slot.kode }}</span>
                                             <div class="bp-car-top">🚙</div>
                                             <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
-                                            {% if slot.waktu_habis %}
-                                            <form method="POST" action="/">
-                                                <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
-                                                <input type="hidden" name="jenis_keluar" value="selesai">
-                                                <button type="submit" class="bp-btn-done">Selesai</button>
-                                            </form>
+                                            {% if slot.is_owner %}
+                                                {% if slot.waktu_habis %}
+                                                <form method="POST" action="/">
+                                                    <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                                    <input type="hidden" name="jenis_keluar" value="selesai">
+                                                    <button type="submit" class="bp-btn-done">Selesai</button>
+                                                </form>
+                                                {% else %}
+                                                <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                                {% endif %}
                                             {% else %}
-                                            <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                                <span class="bp-locked-tag">🔒 Terisi</span>
                                             {% endif %}
                                         </div>
                                         {% endif %}
@@ -592,19 +603,23 @@
                                             <small>KOSONG</small>
                                         </div>
                                         {% else %}
-                                        <div class="bp-bay bay-terisi bay-bottom">
+                                        <div class="bp-bay bay-terisi bay-bottom {{ 'bay-mine' if slot.is_owner else '' }}">
                                             <span class="sensor-led led-red"></span>
                                             <span class="bp-code">{{ slot.kode }}</span>
                                             <div class="bp-car-top">🚙</div>
                                             <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
-                                            {% if slot.waktu_habis %}
-                                            <form method="POST" action="/">
-                                                <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
-                                                <input type="hidden" name="jenis_keluar" value="selesai">
-                                                <button type="submit" class="bp-btn-done">Selesai</button>
-                                            </form>
+                                            {% if slot.is_owner %}
+                                                {% if slot.waktu_habis %}
+                                                <form method="POST" action="/">
+                                                    <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                                    <input type="hidden" name="jenis_keluar" value="selesai">
+                                                    <button type="submit" class="bp-btn-done">Selesai</button>
+                                                </form>
+                                                {% else %}
+                                                <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                                {% endif %}
                                             {% else %}
-                                            <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                                <span class="bp-locked-tag">🔒 Terisi</span>
                                             {% endif %}
                                         </div>
                                         {% endif %}
@@ -633,19 +648,23 @@
                                     <small>TERSEDIA</small>
                                 </div>
                                 {% else %}
-                                <div class="bp-bay bay-terisi bay-plaza">
+                                <div class="bp-bay bay-terisi bay-plaza {{ 'bay-mine' if slot.is_owner else '' }}">
                                     <span class="sensor-led led-red"></span>
                                     <span class="bp-code">{{ slot.kode }}</span>
                                     <div class="bp-car-top">🚘</div>
                                     <strong class="bp-plat">{{ slot.plat_nomor }}</strong>
-                                    {% if slot.waktu_habis %}
-                                    <form method="POST" action="/">
-                                        <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
-                                        <input type="hidden" name="jenis_keluar" value="selesai">
-                                        <button type="submit" class="bp-btn-done">Selesai</button>
-                                    </form>
+                                    {% if slot.is_owner %}
+                                        {% if slot.waktu_habis %}
+                                        <form method="POST" action="/">
+                                            <input type="hidden" name="keluar_id" value="{{ slot.id_data }}">
+                                            <input type="hidden" name="jenis_keluar" value="selesai">
+                                            <button type="submit" class="bp-btn-done">Selesai</button>
+                                        </form>
+                                        {% else %}
+                                        <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                        {% endif %}
                                     {% else %}
-                                    <button type="button" class="bp-btn-cancel" onclick="bukaModalBatal('{{ slot.id_data }}', '{{ slot.kode }}', '{{ slot.plat_nomor }}', '{{ slot.tarif }}', '{{ slot.sisa_waktu }}')">Batal</button>
+                                        <span class="bp-locked-tag">🔒 Terisi</span>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -666,7 +685,7 @@
                 <div class="panel tariff-info-panel">
                     <h3>Aturan Durasi & Pembatalan</h3>
                     <div class="tariff-hint">
-                        ⏱️ <strong>Kunci Waktu Aktif:</strong> Slot yang sedang berjalan tidak dapat diselesaikan sebelum durasi parkir berakhir. Jika dibatalkan lebih awal, <b>uang yang sudah dibayar tidak akan kembali</b>.
+                        ⏱️ <strong>Kunci Waktu & Akun:</strong> Anda hanya dapat membatalkan atau menyelesaikan booking yang dipesan dari akun Anda sendiri. Jika dibatalkan sebelum waktu habis, <b>uang yang sudah dibayar tidak akan kembali</b>.
                     </div>
                 </div>
 
@@ -678,22 +697,29 @@
 
                     <div class="list-data">
                         {% for item in daftar_data %}
-                        <div class="log-card">
+                        <div class="log-card {{ 'log-card-mine' if item.is_owner else '' }}">
                             <div class="log-info">
-                                <strong>{{ item.plat_nomor }} • Slot {{ item.kode_slot }}</strong>
+                                <strong>
+                                    {{ item.plat_nomor }} • Slot {{ item.kode_slot }}
+                                    {% if item.is_owner %}<span class="mine-pill">⭐ Milik Anda</span>{% endif %}
+                                </strong>
                                 <p>{{ item.nama }} • {{ item.tarif }} • Selesai {{ item.jam_selesai }} (<b>{{ item.sisa_waktu }}</b>)</p>
                             </div>
-                            {% if item.waktu_habis %}
-                            <form method="POST" action="/">
-                                <input type="hidden" name="keluar_id" value="{{ item.id }}">
-                                <input type="hidden" name="jenis_keluar" value="selesai">
-                                <button type="submit" class="btn-selesai-mini">Selesai</button>
-                            </form>
+                            {% if item.is_owner %}
+                                {% if item.waktu_habis %}
+                                <form method="POST" action="/">
+                                    <input type="hidden" name="keluar_id" value="{{ item.id }}">
+                                    <input type="hidden" name="jenis_keluar" value="selesai">
+                                    <button type="submit" class="btn-selesai-mini">Selesai</button>
+                                </form>
+                                {% else %}
+                                <button type="button" class="btn-mini-out"
+                                        onclick="bukaModalBatal('{{ item.id }}', '{{ item.kode_slot }}', '{{ item.plat_nomor }}', '{{ item.tarif }}', '{{ item.sisa_waktu }}')">
+                                    Batalkan
+                                </button>
+                                {% endif %}
                             {% else %}
-                            <button type="button" class="btn-mini-out"
-                                    onclick="bukaModalBatal('{{ item.id }}', '{{ item.kode_slot }}', '{{ item.plat_nomor }}', '{{ item.tarif }}', '{{ item.sisa_waktu }}')">
-                                Batalkan
-                            </button>
+                                <span class="locked-pill">🔒 Terkunci</span>
                             {% endif %}
                         </div>
                         {% else %}
