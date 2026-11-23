@@ -349,6 +349,13 @@ def catch_all(path):
                 db.session.commit()
             return render_dashboard()
 
+    if request.form.get('hapus_member_id') and session.get('mode') == 'admin':
+            member_row = MemberParkir.query.get(int(request.form.get('hapus_member_id')))
+            if member_row:
+                db.session.delete(member_row)
+                db.session.commit()
+            return render_dashboard()
+
         if request.form.get('aksi') == 'hapus_semua_notif' and session.get('mode') == 'admin':
             for row in DataParkir.query.all():
                 if 'STATUS: DIBATALKAN' in row.keterangan:
