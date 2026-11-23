@@ -14,7 +14,7 @@
     <div class="bg-orb orb-2"></div>
 
     {% if page_view == 'admin_login' %}
-    <!-- ==================== 1. HALAMAN LOGIN KHUSUS ADMIN (TEMA TERANG) ==================== -->
+    <!-- ==================== 1. HALAMAN LOGIN KHUSUS ADMIN ==================== -->
     <div class="login-wrapper animate-fade-up">
         <div class="admin-login-card">
             <div class="admin-shield-icon">🛡️</div>
@@ -40,7 +40,7 @@
     </div>
 
     {% elif page_view == 'admin_dashboard' %}
-    <!-- ==================== 2. DASHBOARD KHUSUS ADMIN (TEMA TERANG + NOTIF BATAL) ==================== -->
+    <!-- ==================== 2. DASHBOARD KHUSUS ADMIN ==================== -->
     <div class="wrapper" id="adminDashboardRoot">
         <header class="admin-header animate-fade-down">
             <div class="brand">
@@ -243,17 +243,6 @@
                         <div class="empty-state"><p>Belum ada member terdaftar.</p></div>
                         {% endfor %}
                     </div>
-                        {% for m in daftar_member %}
-                        <div class="admin-log-card">
-                            <div class="log-info">
-                                <strong>👑 {{ m.nama }} ({{ m.plat_nomor }})</strong>
-                                <p>No. HP: {{ m.no_hp }}</p>
-                            </div>
-                        </div>
-                        {% else %}
-                        <div class="empty-state"><p>Belum ada member terdaftar.</p></div>
-                        {% endfor %}
-                    </div>
                 </div>
             </aside>
         </div>
@@ -308,7 +297,7 @@
                     </div>
 
                     <div class="dev-credit-box">
-                        <strong>develop by GN.Team</strong>
+                        <strong>develop by GN</strong>
                     </div>
                 </div>
             </div>
@@ -360,7 +349,7 @@
     </div>
 
     {% else %}
-    <!-- ==================== 4. HALAMAN UTAMA PENGUNJUNG (KEPEMILIKAN TERKUNCI PER AKUN) ==================== -->
+    <!-- ==================== 4. HALAMAN UTAMA PENGUNJUNG ==================== -->
     <div class="wrapper" id="appContext"
          data-is-member="{{ 'true' if is_member else 'false' }}"
          data-user-nama="{{ user if is_member else '' }}"
@@ -896,37 +885,7 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL PERINGATAN PEMBATALAN (ANIMASI MERAH) ==================== -->
+    <!-- ==================== MODAL PERINGATAN PEMBATALAN ==================== -->
     <div id="modalBatal" class="modal-overlay" onclick="if(event.target.id==='modalBatal') tutupModalBatal()">
         <div class="modal-box cancel-warning-modal animate-shake-pop">
             <div class="warning-pulse-ring">
-                <span>⚠️</span>
-            </div>
-            <h3>Batalkan Booking Parkir?</h3>
-            <p class="cancel-slot-info">
-                Slot <strong id="batalKodeSlot">A1</strong> • Plat <strong id="batalPlat">B 1234 XYZ</strong><br>
-                Sisa waktu parkir: <span id="batalSisaWaktu">1j 30m lagi</span>
-            </p>
-
-            <div class="non-refundable-alert">
-                <strong>🚫 PERHATIAN: UANG TIDAK AKAN KEMBALI!</strong>
-                <p>Durasi parkir Anda belum habis. Jika Anda membatalkan booking sekarang, biaya sebesar <strong id="batalNominal">Rp5.000</strong> yang telah dibayarkan dinyatakan <b>hangus (Non-Refundable)</b> dan slot akan langsung dikosongkan.</p>
-            </div>
-
-            <form method="POST" action="/" class="cancel-modal-actions">
-                <input type="hidden" id="batalKeluarId" name="keluar_id" value="">
-                <input type="hidden" name="jenis_keluar" value="batal">
-                <button type="button" class="btn-keep-parking" onclick="tutupModalBatal()">
-                    ← Tetap Lanjutkan Parkir
-                </button>
-                <button type="submit" class="btn-confirm-forfeit">
-                    🗑️ Ya, Batalkan (Uang Hangus)
-                </button>
-            </form>
-        </div>
-    </div>
-    {% endif %}
-
-    <script src="/?asset=js"></script>
-</body>
-</html>
