@@ -1994,3 +1994,20 @@ body.admin-theme {
         align-items: flex-start;
     }
 }
+
+/* Ilustrasi Statis Mobil Hadap Depan di Halaman Login */
+.static-front-scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 16px 14px;
+}
+
+.front-car-svg {
+    width: 100%;
+    max-width: 240px;
+    height: auto;
+    display: block;
+    margin: 6px auto 0;
+}
