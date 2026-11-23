@@ -129,7 +129,6 @@ def parse_booking_info(item, now_wib, current_owner=''):
             waktu_habis = False
 
     no_hp_val = hp_match.group(1).strip() if hp_match else '-'
-    # Cek kepemilikan akun: cocokkan OwnerID atau No. HP member yang sedang login
     is_owner = False
     if current_owner and owner_id and current_owner == owner_id:
         is_owner = True
@@ -342,6 +341,7 @@ def catch_all(path):
 
     if request.method == 'POST':
         init_db_safe()
+
         if request.form.get('hapus_notif_id') and session.get('mode') == 'admin':
             notif_row = DataParkir.query.get(int(request.form.get('hapus_notif_id')))
             if notif_row:
@@ -349,7 +349,7 @@ def catch_all(path):
                 db.session.commit()
             return render_dashboard()
 
-    if request.form.get('hapus_member_id') and session.get('mode') == 'admin':
+        if request.form.get('hapus_member_id') and session.get('mode') == 'admin':
             member_row = MemberParkir.query.get(int(request.form.get('hapus_member_id')))
             if member_row:
                 db.session.delete(member_row)
@@ -375,7 +375,6 @@ def catch_all(path):
         if request.form.get('keluar_id'):
             data = DataParkir.query.get(int(request.form.get('keluar_id')))
             if data:
-                # Validasi kepemilikan jika yang meminta bukan Admin
                 if session.get('mode') != 'admin':
                     current_owner = get_current_owner_id()
                     info_cek = parse_booking_info(data, datetime.now(WIB), current_owner)
