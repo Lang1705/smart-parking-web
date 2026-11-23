@@ -234,6 +234,21 @@
                                 <strong>👑 {{ m.nama }} ({{ m.plat_nomor }})</strong>
                                 <p>No. HP: {{ m.no_hp }}</p>
                             </div>
+                            <form method="POST" action="/" onsubmit="return confirm('Hapus member {{ m.nama }} ({{ m.no_hp }}) secara permanen?');">
+                                <input type="hidden" name="hapus_member_id" value="{{ m.id }}">
+                                <button type="submit" class="btn-mini-out">Hapus</button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <div class="empty-state"><p>Belum ada member terdaftar.</p></div>
+                        {% endfor %}
+                    </div>
+                        {% for m in daftar_member %}
+                        <div class="admin-log-card">
+                            <div class="log-info">
+                                <strong>👑 {{ m.nama }} ({{ m.plat_nomor }})</strong>
+                                <p>No. HP: {{ m.no_hp }}</p>
+                            </div>
                         </div>
                         {% else %}
                         <div class="empty-state"><p>Belum ada member terdaftar.</p></div>
