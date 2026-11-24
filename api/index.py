@@ -3,7 +3,7 @@ import re
 import uuid
 import traceback
 from datetime import datetime, timedelta, timezone
-from flask import Flask, render_template, request, session, Response, send_from_directory
+from flask import Flask, render_template, request, session, Response, send_from_directory, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -93,8 +93,8 @@ def parse_booking_info(item, now_wib, current_owner=''):
     mall_match = re.search(r'Mall:\s*(MALL_[AB])', ket)
     mall_id = mall_match.group(1) if mall_match else 'MALL_A'
 
-    slot_match = re.search(r'Slot\s+([ABP]\d+)', ket.upper())
-    kode_slot = slot_match.group(1) if slot_match else None
+    slot_match = re.search(r'Slot\s*([ABP]\d+)', ket.upper())
+    kode_slot = slot_match.group(1) if slot_match else ''
 
     owner_match = re.search(r'OwnerID:\s*([^|\s]+)', ket)
     owner_id = owner_match.group(1).strip() if owner_match else ''
@@ -180,10 +180,13 @@ def ambil_data_semua_mall(selected_mall='MALL_A'):
             log_pembatalan.append(info)
             continue
 
+        if not info['kode_slot']:
+            continue
+
         parsed_aktif.append(info)
         m_id = info['mall_id']
         k_slot = info['kode_slot']
-        if m_id in terisi_per_mall and k_slot and k_slot not in terisi_per_mall[m_id]:
+        if m_id in terisi_per_mall and k_slot not in terisi_per_mall[m_id]:
             terisi_per_mall[m_id][k_slot] = info
 
     mall_info = MALL_CONFIG.get(selected_mall, MALL_CONFIG['MALL_A'])
@@ -204,6 +207,7 @@ def ambil_data_semua_mall(selected_mall='MALL_A'):
                     'nama': d['nama'],
                     'tarif': d['tarif'],
                     'metode': d['metode'],
+                    'durasi_jam': d['durasi_jam'],
                     'jam_selesai': d['jam_selesai'],
                     'waktu_habis': d['waktu_habis'],
                     'sisa_waktu': d['sisa_waktu']
@@ -218,6 +222,7 @@ def ambil_data_semua_mall(selected_mall='MALL_A'):
                     'nama': '-',
                     'tarif': '-',
                     'metode': '-',
+                    'durasi_jam': 0,
                     'jam_selesai': '-',
                     'waktu_habis': True,
                     'sisa_waktu': '-'
@@ -272,7 +277,7 @@ def proses_form_login():
         if pw == ADMIN_PASSWORD:
             session['mode'] = 'admin'
             session['nama'] = 'Administrator Utama'
-            return render_dashboard()
+            return redirect('/')
         return render_template('index.html', page_view='admin_login', error="Password Admin salah! (Default: admin123)")
 
     if aksi == 'guest':
@@ -281,7 +286,7 @@ def proses_form_login():
         session['no_hp'] = ''
         session['plat_member'] = ''
         session['guest_uid'] = f"GST_{uuid.uuid4().hex[:10]}"
-        return render_dashboard()
+        return redirect('/')
 
     no_hp = request.form.get('no_hp', '').strip()
     nama = request.form.get('nama', '').strip()
@@ -301,7 +306,7 @@ def proses_form_login():
         session['nama'] = member.nama
         session['no_hp'] = member.no_hp
         session['plat_member'] = member.plat_nomor
-        return render_dashboard()
+        return redirect('/')
 
     error = "Untuk daftar/masuk Member, wajib isi No. HP, Nama, dan Plat Kendaraan!"
     return render_template('index.html', page_view='user_login', error=error)
@@ -321,14 +326,15 @@ def catch_all(path):
 
     if request.args.get('mall') in MALL_CONFIG:
         session['selected_mall'] = request.args.get('mall')
+        return redirect('/')
 
     if request.args.get('logout') == '1':
         session.clear()
-        return render_template('index.html', page_view='user_login', error=None)
+        return redirect('/')
 
     if request.args.get('admin') == '1':
         if session.get('mode') == 'admin':
-            return render_dashboard()
+            return redirect('/')
         session.clear()
         return render_template('index.html', page_view='admin_login', error=None)
 
@@ -347,21 +353,21 @@ def catch_all(path):
             if notif_row:
                 db.session.delete(notif_row)
                 db.session.commit()
-            return render_dashboard()
+            return redirect('/')
 
         if request.form.get('hapus_member_id') and session.get('mode') == 'admin':
             member_row = MemberParkir.query.get(int(request.form.get('hapus_member_id')))
             if member_row:
                 db.session.delete(member_row)
                 db.session.commit()
-            return render_dashboard()
+            return redirect('/')
 
         if request.form.get('aksi') == 'hapus_semua_notif' and session.get('mode') == 'admin':
             for row in DataParkir.query.all():
                 if 'STATUS: DIBATALKAN' in row.keterangan:
                     db.session.delete(row)
             db.session.commit()
-            return render_dashboard()
+            return redirect('/')
 
         if request.form.get('aksi') == 'reset_semua' and session.get('mode') == 'admin':
             mall_target = session.get('selected_mall', 'MALL_A')
@@ -370,7 +376,7 @@ def catch_all(path):
                     if f"Mall: {mall_target}" in row.keterangan or (mall_target == 'MALL_A' and 'Mall:' not in row.keterangan):
                         db.session.delete(row)
             db.session.commit()
-            return render_dashboard()
+            return redirect('/')
 
         if request.form.get('keluar_id'):
             data = DataParkir.query.get(int(request.form.get('keluar_id')))
@@ -379,7 +385,7 @@ def catch_all(path):
                     current_owner = get_current_owner_id()
                     info_cek = parse_booking_info(data, datetime.now(WIB), current_owner)
                     if not info_cek['is_owner']:
-                        return render_dashboard()
+                        return redirect('/')
 
                     jenis = request.form.get('jenis_keluar', 'selesai')
                     if jenis == 'batal':
@@ -387,23 +393,27 @@ def catch_all(path):
                         if 'STATUS: DIBATALKAN' not in data.keterangan:
                             data.keterangan = f"STATUS: DIBATALKAN | WaktuBatal: {waktu_batal_str} | {data.keterangan}"
                             db.session.commit()
-                        return render_dashboard()
+                        return redirect('/')
 
                     if not info_cek['waktu_habis']:
-                        return render_dashboard()
+                        return redirect('/')
 
                 db.session.delete(data)
                 db.session.commit()
-            return render_dashboard()
+            return redirect('/')
 
         nama_pengendara = request.form.get('nama_pengendara', '').strip()
         no_hp = request.form.get('no_hp', '').strip()
         plat = request.form.get('plat_nomor', '').strip().upper()
-        slot_pilihan = request.form.get('slot_pilihan', '').strip()
+        slot_pilihan = request.form.get('slot_pilihan', '').strip().upper()
         durasi = int(request.form.get('durasi', 1))
         metode_bayar = request.form.get('metode_bayar', 'QRIS').strip()
         mall_id = session.get('selected_mall', 'MALL_A')
         owner_id = get_current_owner_id()
+
+        valid_slots = MALL_CONFIG.get(mall_id, MALL_CONFIG['MALL_A'])['semua_slot']
+        if slot_pilihan not in valid_slots:
+            slot_pilihan = valid_slots[0]
 
         if nama_pengendara and no_hp and plat and slot_pilihan:
             _, diskon, total_bayar = hitung_tarif_akhir(durasi, is_member)
@@ -422,6 +432,8 @@ def catch_all(path):
             data_baru = DataParkir(plat_nomor=plat, keterangan=ket_lengkap)
             db.session.add(data_baru)
             db.session.commit()
+
+        return redirect('/')
 
     return render_dashboard()
 
