@@ -11,11 +11,14 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
-app.secret_key = os.environ.get('SECRET_KEY', 'smart-parking-esa-unggul-2026')
+app.secret_key = os.environ.get('SECRET_KEY', 'smart-parking-esa-unggul-2026-fixed')
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-database_url = os.environ.get('DATABASE_URL', 'sqlite:////tmp/lokal.db')
-if database_url.startswith("postgres://"):
+database_url = os.environ.get('DATABASE_URL', '').strip()
+if not database_url:
+    database_url = 'sqlite:////tmp/lokal.db'
+elif database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
@@ -87,14 +90,16 @@ def hitung_tarif_akhir(durasi_jam, is_member=False):
     return tarif_dasar, 0, tarif_dasar
 
 def parse_booking_info(item, now_wib, current_owner=''):
-    ket = item.keterangan
+    ket = item.keterangan or ''
     is_dibatalkan = ('STATUS: DIBATALKAN' in ket)
 
     mall_match = re.search(r'Mall:\s*(MALL_[AB])', ket)
     mall_id = mall_match.group(1) if mall_match else 'MALL_A'
 
-    slot_match = re.search(r'Slot\s*([ABP]\d+)', ket.upper())
-    kode_slot = slot_match.group(1) if slot_match else ''
+    slot_match = re.search(r'Slot[:\s]+([ABP]\d{1,2})\b', ket, re.IGNORECASE)
+    if not slot_match:
+        slot_match = re.search(r'\b([ABP]\d{1,2})\b', ket, re.IGNORECASE)
+    kode_slot = slot_match.group(1).upper() if slot_match else ''
 
     owner_match = re.search(r'OwnerID:\s*([^|\s]+)', ket)
     owner_id = owner_match.group(1).strip() if owner_match else ''
@@ -129,8 +134,12 @@ def parse_booking_info(item, now_wib, current_owner=''):
             waktu_habis = False
 
     no_hp_val = hp_match.group(1).strip() if hp_match else '-'
+    owned_ids = session.get('owned_booking_ids', [])
+
     is_owner = False
-    if current_owner and owner_id and current_owner == owner_id:
+    if item.id in owned_ids:
+        is_owner = True
+    elif current_owner and owner_id and current_owner == owner_id:
         is_owner = True
     elif session.get('mode') == 'member' and session.get('no_hp') and session.get('no_hp').strip() == no_hp_val:
         is_owner = True
@@ -169,7 +178,7 @@ def ambil_data_semua_mall(selected_mall='MALL_A'):
     terisi_per_mall = {'MALL_A': {}, 'MALL_B': {}}
 
     for item in daftar_raw:
-        tarif_num_match = re.search(r'Total:\s*Rp([\d.]+)', item.keterangan)
+        tarif_num_match = re.search(r'Total:\s*Rp([\d.]+)', item.keterangan or '')
         if tarif_num_match:
             angka_str = tarif_num_match.group(1).replace('.', '')
             if angka_str.isdigit():
@@ -286,6 +295,7 @@ def proses_form_login():
         session['no_hp'] = ''
         session['plat_member'] = ''
         session['guest_uid'] = f"GST_{uuid.uuid4().hex[:10]}"
+        session['owned_booking_ids'] = []
         return redirect('/')
 
     no_hp = request.form.get('no_hp', '').strip()
@@ -364,7 +374,7 @@ def catch_all(path):
 
         if request.form.get('aksi') == 'hapus_semua_notif' and session.get('mode') == 'admin':
             for row in DataParkir.query.all():
-                if 'STATUS: DIBATALKAN' in row.keterangan:
+                if 'STATUS: DIBATALKAN' in (row.keterangan or ''):
                     db.session.delete(row)
             db.session.commit()
             return redirect('/')
@@ -372,8 +382,8 @@ def catch_all(path):
         if request.form.get('aksi') == 'reset_semua' and session.get('mode') == 'admin':
             mall_target = session.get('selected_mall', 'MALL_A')
             for row in DataParkir.query.all():
-                if 'STATUS: DIBATALKAN' not in row.keterangan:
-                    if f"Mall: {mall_target}" in row.keterangan or (mall_target == 'MALL_A' and 'Mall:' not in row.keterangan):
+                if 'STATUS: DIBATALKAN' not in (row.keterangan or ''):
+                    if f"Mall: {mall_target}" in (row.keterangan or '') or (mall_target == 'MALL_A' and 'Mall:' not in (row.keterangan or '')):
                         db.session.delete(row)
             db.session.commit()
             return redirect('/')
@@ -425,13 +435,18 @@ def catch_all(path):
             waktu_selesai = (now_wib + timedelta(hours=durasi)).strftime("%Y-%m-%d %H:%M")
 
             ket_lengkap = (
-                f"Mall: {mall_id} | Slot {slot_pilihan} | OwnerID: {owner_id} | {status_member} | "
+                f"Mall: {mall_id} | Slot: {slot_pilihan} | OwnerID: {owner_id} | {status_member} | "
                 f"Nama: {nama_pengendara} ({no_hp}) | Durasi: {durasi} Jam | Selesai: {waktu_selesai} | "
                 f"Total: {tarif_rp} | {status_bayar}"
             )
             data_baru = DataParkir(plat_nomor=plat, keterangan=ket_lengkap)
             db.session.add(data_baru)
             db.session.commit()
+
+            owned = session.get('owned_booking_ids', [])
+            owned.append(data_baru.id)
+            session['owned_booking_ids'] = owned
+            session.modified = True
 
         return redirect('/')
 
